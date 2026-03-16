@@ -770,7 +770,7 @@ document.getElementById('btn-signup').addEventListener('click', async()=>{
   if(pass.length<8){showMsg(authMsg,'Password must be at least 8 characters.','err');return;}
   const btn = document.getElementById('btn-signup');
   btn.disabled=true; btn.textContent='Creating…'; authMsg.className='auth-msg';
-  const {data,error} = await sb.auth.signUp({email,password:pass});
+  const {data,error} = await sb.auth.signUp({email,password:pass, options:{ emailRedirectTo:'https://gaggyisgood-wq.github.io/toolkit/' }});
   btn.disabled=false; btn.textContent='Create account';
   if(error){showMsg(authMsg,error.message,'err');return;}
   if(data?.user){
@@ -787,7 +787,7 @@ document.getElementById('btn-reset').addEventListener('click', async()=>{
   const btn = document.getElementById('btn-reset');
   btn.disabled=true; btn.textContent='Sending…'; authMsg.className='auth-msg';
   const {error} = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href
+    redirectTo: 'https://gaggyisgood-wq.github.io/toolkit/'
   });
   btn.disabled=false; btn.textContent='Send reset link';
   if(error) showMsg(authMsg,error.message,'err');
