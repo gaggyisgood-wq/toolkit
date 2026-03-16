@@ -6,7 +6,7 @@
 <title>ToolKit</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/bwip-js@3/dist/bwip-js-min.js" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -590,8 +590,18 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
           <button class="chip" data-type="url">🔗 URL</button>
           <button class="chip" data-type="email">📧 Email</button>
           <button class="chip" data-type="phone">📞 Phone</button>
+          <button class="chip" data-type="sms">💬 SMS</button>
+          <button class="chip" data-type="whatsapp">🟢 WhatsApp</button>
           <button class="chip" data-type="wifi">📶 Wi-Fi</button>
           <button class="chip" data-type="vcard">👤 Contact</button>
+          <button class="chip" data-type="location">📍 Location</button>
+          <button class="chip" data-type="event">📅 Event</button>
+          <button class="chip" data-type="zoom">🎥 Zoom</button>
+          <button class="chip" data-type="youtube">▶️ YouTube</button>
+          <button class="chip" data-type="instagram">📸 Instagram</button>
+          <button class="chip" data-type="twitter">𝕏 Twitter/X</button>
+          <button class="chip" data-type="crypto">₿ Crypto</button>
+          <button class="chip" data-type="appstore">📱 App Store</button>
         </div>
         <div id="cf-text"><div class="fl"><label>Text</label><textarea id="ci-text" rows="3" placeholder="Enter text…"></textarea></div></div>
         <div id="cf-url" style="display:none"><div class="fl"><label>URL</label><input type="url" id="ci-url" placeholder="https://example.com"></div></div>
@@ -613,17 +623,126 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
           <div class="fl"><label>Company</label><input type="text" id="ci-vorg" placeholder="Acme Corp"></div>
           <div class="fl"><label>Website</label><input type="url" id="ci-vurl" placeholder="https://example.com"></div>
         </div>
+        <div id="cf-sms" style="display:none">
+          <div class="fl"><label>Phone number</label><input type="tel" id="ci-sms-phone" placeholder="+65 9123 4567"></div>
+          <div class="fl"><label>Message (optional)</label><textarea id="ci-sms-msg" rows="2" placeholder="Hey, check this out…"></textarea></div>
+        </div>
+        <div id="cf-whatsapp" style="display:none">
+          <div class="fl"><label>Phone number (with country code)</label><input type="tel" id="ci-wa-phone" placeholder="+6591234567"></div>
+          <div class="fl"><label>Pre-filled message (optional)</label><textarea id="ci-wa-msg" rows="2" placeholder="Hey there!"></textarea></div>
+        </div>
+        <div id="cf-location" style="display:none">
+          <div class="fl"><label>Latitude</label><input type="text" id="ci-lat" placeholder="1.3521"></div>
+          <div class="fl"><label>Longitude</label><input type="text" id="ci-lng" placeholder="103.8198"></div>
+          <div class="fl"><label>Label (optional)</label><input type="text" id="ci-loc-label" placeholder="My Location"></div>
+        </div>
+        <div id="cf-event" style="display:none">
+          <div class="fl"><label>Event title</label><input type="text" id="ci-ev-title" placeholder="Team Meeting"></div>
+          <div class="fl"><label>Location</label><input type="text" id="ci-ev-loc" placeholder="Office / Zoom link"></div>
+          <div class="fl"><label>Start (YYYY-MM-DD HH:MM)</label><input type="text" id="ci-ev-start" placeholder="2025-12-25 10:00"></div>
+          <div class="fl"><label>End (YYYY-MM-DD HH:MM)</label><input type="text" id="ci-ev-end" placeholder="2025-12-25 11:00"></div>
+          <div class="fl"><label>Description (optional)</label><textarea id="ci-ev-desc" rows="2" placeholder="Agenda…"></textarea></div>
+        </div>
+        <div id="cf-zoom" style="display:none">
+          <div class="fl"><label>Meeting ID</label><input type="text" id="ci-zoom-id" placeholder="123 456 7890"></div>
+          <div class="fl"><label>Passcode (optional)</label><input type="text" id="ci-zoom-pass" placeholder="abc123"></div>
+        </div>
+        <div id="cf-youtube" style="display:none">
+          <div class="fl"><label>YouTube video URL or ID</label><input type="text" id="ci-yt" placeholder="https://youtu.be/xxxxx or dQw4w9WgXcQ"></div>
+        </div>
+        <div id="cf-instagram" style="display:none">
+          <div class="fl"><label>Instagram username</label><input type="text" id="ci-ig" placeholder="username (no @)"></div>
+        </div>
+        <div id="cf-twitter" style="display:none">
+          <div class="fl"><label>Twitter/X username</label><input type="text" id="ci-tw" placeholder="username (no @)"></div>
+        </div>
+        <div id="cf-crypto" style="display:none">
+          <div class="fl"><label>Coin</label><select id="ci-crypto-coin"><option value="bitcoin">Bitcoin (BTC)</option><option value="ethereum">Ethereum (ETH)</option><option value="litecoin">Litecoin (LTC)</option></select></div>
+          <div class="fl"><label>Wallet address</label><input type="text" id="ci-crypto-addr" placeholder="bc1q…"></div>
+          <div class="fl"><label>Amount (optional)</label><input type="number" id="ci-crypto-amt" placeholder="0.001" step="any"></div>
+          <div class="fl"><label>Label (optional)</label><input type="text" id="ci-crypto-label" placeholder="Donation"></div>
+        </div>
+        <div id="cf-appstore" style="display:none">
+          <div class="fl"><label>Platform</label><select id="ci-app-platform"><option value="ios">App Store (iOS)</option><option value="android">Google Play (Android)</option></select></div>
+          <div class="fl"><label>App ID / Package name</label><input type="text" id="ci-app-id" placeholder="iOS: 123456789 · Android: com.example.app"></div>
+        </div>
       </div>
       <div class="qr-card">
-        <div class="qr-card-title">Appearance</div>
+        <div class="qr-card-title">Symbology &amp; Appearance</div>
+        <div class="fl" style="margin-bottom:14px">
+          <label>Code type</label>
+          <select id="qr-symbology">
+            <optgroup label="2D Codes">
+              <option value="qrcode" selected>QR Code</option>
+              <option value="qrcode" data-ecl="L">QR Code — Low error correction</option>
+              <option value="microqrcode">Micro QR Code</option>
+              <option value="datamatrix">Data Matrix</option>
+              <option value="azteccode">Aztec Code</option>
+              <option value="azteccodecompact">Aztec Code Compact</option>
+              <option value="pdf417">PDF417</option>
+              <option value="pdf417compact">PDF417 Compact</option>
+              <option value="micropdf417">Micro PDF417</option>
+              <option value="hanxin">Han Xin Code</option>
+              <option value="dotcode">Dot Code</option>
+              <option value="maxicode">MaxiCode</option>
+            </optgroup>
+            <optgroup label="1D Barcodes — Retail">
+              <option value="ean13">EAN-13</option>
+              <option value="ean8">EAN-8</option>
+              <option value="ean5">EAN-5 (Supplement)</option>
+              <option value="ean2">EAN-2 (Supplement)</option>
+              <option value="upca">UPC-A</option>
+              <option value="upce">UPC-E</option>
+              <option value="isbn">ISBN</option>
+              <option value="ismn">ISMN</option>
+              <option value="issn">ISSN</option>
+            </optgroup>
+            <optgroup label="1D Barcodes — General">
+              <option value="code128">Code 128</option>
+              <option value="code39">Code 39</option>
+              <option value="code39ext">Code 39 Extended</option>
+              <option value="code93">Code 93</option>
+              <option value="code93ext">Code 93 Extended</option>
+              <option value="code11">Code 11</option>
+              <option value="codabar">Codabar</option>
+              <option value="interleaved2of5">Interleaved 2 of 5</option>
+              <option value="itf14">ITF-14</option>
+              <option value="plessey">Plessey</option>
+              <option value="msi">MSI Plessey</option>
+            </optgroup>
+            <optgroup label="1D Barcodes — Postal">
+              <option value="auspost">Australia Post</option>
+              <option value="royalmail">Royal Mail (RM4SCC)</option>
+              <option value="postnet">POSTNET</option>
+              <option value="planet">PLANET</option>
+              <option value="onecode">USPS Intelligent Mail</option>
+              <option value="japanpost">Japan Post</option>
+            </optgroup>
+            <optgroup label="GS1 / Supply Chain">
+              <option value="gs1-128">GS1-128</option>
+              <option value="gs1datamatrix">GS1 Data Matrix</option>
+              <option value="gs1qrcode">GS1 QR Code</option>
+              <option value="gs1databar">GS1 DataBar Omnidirectional</option>
+              <option value="gs1databarstacked">GS1 DataBar Stacked</option>
+              <option value="gs1databarlimited">GS1 DataBar Limited</option>
+              <option value="gs1databarexpanded">GS1 DataBar Expanded</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="pharmacode">Pharmacode</option>
+              <option value="channelcode">Channel Code</option>
+              <option value="telepen">Telepen</option>
+              <option value="codeone">Code One</option>
+            </optgroup>
+          </select>
+        </div>
         <div class="appear-opts">
           <div class="color-item"><input type="color" id="qfg" value="#000000"> Dark</div>
           <div class="color-item"><input type="color" id="qbg" value="#ffffff"> Light</div>
         </div>
         <div style="display:flex;align-items:center;gap:9px;margin-bottom:3px">
-          <span style="font-size:.73rem;color:var(--sub)">Size</span>
-          <input type="range" id="qsize" min="128" max="400" value="220" oninput="document.getElementById('qsize-val').textContent=this.value+'px'">
-          <span id="qsize-val" style="font-size:.72rem;color:var(--muted)">220px</span>
+          <span style="font-size:.73rem;color:var(--sub)">Scale</span>
+          <input type="range" id="qsize" min="2" max="10" value="4" oninput="document.getElementById('qsize-val').textContent='×'+this.value">
+          <span id="qsize-val" style="font-size:.72rem;color:var(--muted)">×4</span>
         </div>
         <div class="btn-row" style="margin-top:13px">
           <button class="btn-sm primary" id="btn-gen">✨ Generate</button>
@@ -631,7 +750,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
         </div>
       </div>
       <div class="qr-card" id="qr-out-card">
-        <div class="qr-card-title">Your QR Code</div>
+        <div class="qr-card-title" id="out-card-title">Your Code</div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:13px">
           <div id="qr-canvas-wrap"><div id="qrcode"></div></div>
           <div class="btn-row" style="width:100%">
@@ -1192,14 +1311,117 @@ document.getElementById('btn-copy-result').addEventListener('click',()=>{const t
 document.getElementById('btn-open-result').addEventListener('click',()=>{const t=document.getElementById('result-text').textContent;if(t.startsWith('http'))window.open(t,'_blank');else toast('Not a URL');});
 document.getElementById('btn-share-result').addEventListener('click',()=>{const t=document.getElementById('result-text').textContent;if(!t||t==='Waiting for scan…')return;if(navigator.share)navigator.share({text:t}).catch(()=>{});else navigator.clipboard.writeText(t).then(()=>toast('Copied!'));});
 let createType='text';
-document.getElementById('type-chips').addEventListener('click',e=>{const chip=e.target.closest('.chip');if(!chip)return;createType=chip.dataset.type;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));chip.classList.add('on');['text','url','email','phone','wifi','vcard'].forEach(f=>document.getElementById('cf-'+f).style.display='none');document.getElementById('cf-'+createType).style.display='block';});
-function buildContent(){switch(createType){case 'text':return document.getElementById('ci-text').value;case 'url':return document.getElementById('ci-url').value;case 'phone':return'tel:'+document.getElementById('ci-phone').value;case 'email':{const a=document.getElementById('ci-email').value,s=document.getElementById('ci-esub').value,b=document.getElementById('ci-ebody').value;let u='mailto:'+a;const p=[];if(s)p.push('subject='+encodeURIComponent(s));if(b)p.push('body='+encodeURIComponent(b));if(p.length)u+='?'+p.join('&');return u;}case 'wifi':return`WIFI:T:${document.getElementById('ci-wsec').value};S:${document.getElementById('ci-ssid').value};P:${document.getElementById('ci-wpass').value};;`;case 'vcard':return`BEGIN:VCARD\nVERSION:3.0\nFN:${document.getElementById('ci-vname').value}\nTEL:${document.getElementById('ci-vphone').value}\nEMAIL:${document.getElementById('ci-vemail').value}\nORG:${document.getElementById('ci-vorg').value}\nURL:${document.getElementById('ci-vurl').value}\nEND:VCARD`;default:return'';}}
-let qrInst=null;
-document.getElementById('btn-gen').addEventListener('click',()=>{const content=buildContent().trim();if(!content){toast('Fill in the fields');return;}if(typeof QRCode==='undefined'){toast('QR library loading…');return;}const fg=document.getElementById('qfg').value,bg=document.getElementById('qbg').value,size=parseInt(document.getElementById('qsize').value);const wrap=document.getElementById('qrcode');wrap.innerHTML='';if(qrInst){try{qrInst.clear();}catch(e){}}qrInst=new QRCode(wrap,{text:content,width:size,height:size,colorDark:fg,colorLight:bg,correctLevel:QRCode.CorrectLevel.H});document.getElementById('qr-out-card').style.display='block';document.getElementById('qr-out-card').scrollIntoView({behavior:'smooth',block:'nearest'});toast('QR generated!');});
-document.getElementById('btn-clr-qr').addEventListener('click',()=>{document.getElementById('qrcode').innerHTML='';document.getElementById('qr-out-card').style.display='none';if(qrInst){try{qrInst.clear();}catch(e){}qrInst=null;}});
-function getQRC(){return document.querySelector('#qrcode canvas')||document.querySelector('#qrcode img');}
-document.getElementById('btn-dl').addEventListener('click',()=>{const el=getQRC();if(!el){toast('Generate first');return;}const size=parseInt(document.getElementById('qsize').value);const c=el.tagName==='CANVAS'?el:(()=>{const cv=document.createElement('canvas');cv.width=cv.height=size;cv.getContext('2d').drawImage(el,0,0,size,size);return cv;})();const a=document.createElement('a');a.download='qr.png';a.href=c.toDataURL('image/png');a.click();toast('Downloaded!');});
-document.getElementById('btn-cp-img').addEventListener('click',()=>{const el=getQRC();if(!el){toast('Generate first');return;}const size=parseInt(document.getElementById('qsize').value);const c=el.tagName==='CANVAS'?el:(()=>{const cv=document.createElement('canvas');cv.width=cv.height=size;cv.getContext('2d').drawImage(el,0,0,size,size);return cv;})();c.toBlob(b=>{try{navigator.clipboard.write([new ClipboardItem({'image/png':b})]);toast('Image copied!');}catch{toast('Not supported here');}});});
+const ALL_TYPES=['text','url','email','phone','sms','whatsapp','wifi','vcard','location','event','zoom','youtube','instagram','twitter','crypto','appstore'];
+document.getElementById('type-chips').addEventListener('click',e=>{
+  const chip=e.target.closest('.chip');if(!chip)return;
+  createType=chip.dataset.type;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));chip.classList.add('on');
+  ALL_TYPES.forEach(f=>{const el=document.getElementById('cf-'+f);if(el)el.style.display='none';});
+  const target=document.getElementById('cf-'+createType);if(target)target.style.display='block';
+});
+function fv(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function buildContent(){
+  switch(createType){
+    case 'text':   return fv('ci-text');
+    case 'url':    return fv('ci-url');
+    case 'phone':  return 'tel:'+fv('ci-phone');
+    case 'sms':{
+      const p=fv('ci-sms-phone'),m=fv('ci-sms-msg');
+      return m?`SMSTO:${p}:${m}`:`SMSTO:${p}`;
+    }
+    case 'whatsapp':{
+      const p=fv('ci-wa-phone').replace(/\D/g,''),m=fv('ci-wa-msg');
+      return m?`https://wa.me/${p}?text=${encodeURIComponent(m)}`:`https://wa.me/${p}`;
+    }
+    case 'email':{
+      const a=fv('ci-email'),s=fv('ci-esub'),b=fv('ci-ebody');
+      let u='mailto:'+a;const p=[];
+      if(s)p.push('subject='+encodeURIComponent(s));
+      if(b)p.push('body='+encodeURIComponent(b));
+      if(p.length)u+='?'+p.join('&');return u;
+    }
+    case 'wifi':   return `WIFI:T:${fv('ci-wsec')};S:${fv('ci-ssid')};P:${fv('ci-wpass')};;`;
+    case 'vcard':  return `BEGIN:VCARD\nVERSION:3.0\nFN:${fv('ci-vname')}\nTEL:${fv('ci-vphone')}\nEMAIL:${fv('ci-vemail')}\nORG:${fv('ci-vorg')}\nURL:${fv('ci-vurl')}\nEND:VCARD`;
+    case 'location':{
+      const lat=fv('ci-lat'),lng=fv('ci-lng'),lbl=fv('ci-loc-label');
+      return lbl?`geo:${lat},${lng}?q=${lat},${lng}(${encodeURIComponent(lbl)})`:`geo:${lat},${lng}`;
+    }
+    case 'event':{
+      const fmt=s=>s.replace(/[-: ]/g,'')+'00';
+      const title=fv('ci-ev-title'),loc=fv('ci-ev-loc'),start=fmt(fv('ci-ev-start')),end=fmt(fv('ci-ev-end')),desc=fv('ci-ev-desc');
+      return `BEGIN:VEVENT\nSUMMARY:${title}\nLOCATION:${loc}\nDTSTART:${start}\nDTEND:${end}\nDESCRIPTION:${desc}\nEND:VEVENT`;
+    }
+    case 'zoom':{
+      const id=fv('ci-zoom-id').replace(/\s/g,''),pass=fv('ci-zoom-pass');
+      let u=`https://zoom.us/j/${id}`;if(pass)u+=`?pwd=${pass}`;return u;
+    }
+    case 'youtube':{
+      const v=fv('ci-yt');
+      const m=v.match(/(?:youtu\.be\/|v=)([\w-]{11})/);
+      return m?`https://youtu.be/${m[1]}`:v;
+    }
+    case 'instagram': return `https://instagram.com/${fv('ci-ig')}`;
+    case 'twitter':   return `https://x.com/${fv('ci-tw')}`;
+    case 'crypto':{
+      const coin=fv('ci-crypto-coin'),addr=fv('ci-crypto-addr'),amt=fv('ci-crypto-amt'),lbl=fv('ci-crypto-label');
+      let u=`${coin}:${addr}`;const p=[];
+      if(amt)p.push('amount='+amt);if(lbl)p.push('label='+encodeURIComponent(lbl));
+      if(p.length)u+='?'+p.join('&');return u;
+    }
+    case 'appstore':{
+      const plat=fv('ci-app-platform'),id=fv('ci-app-id');
+      return plat==='ios'?`https://apps.apple.com/app/id${id}`:`https://play.google.com/store/apps/details?id=${id}`;
+    }
+    default: return '';
+  }
+}
+document.getElementById('btn-gen').addEventListener('click',async()=>{
+  const content=buildContent().trim();
+  if(!content){toast('Fill in the fields');return;}
+  if(typeof bwipjs==='undefined'){toast('Library loading, try again in a sec');return;}
+  const bcid    = document.getElementById('qr-symbology').value;
+  const scale   = parseInt(document.getElementById('qsize').value);
+  const fgHex   = document.getElementById('qfg').value.replace('#','');
+  const bgHex   = document.getElementById('qbg').value.replace('#','');
+  const wrap    = document.getElementById('qrcode');
+  wrap.innerHTML='';
+  const canvas  = document.createElement('canvas');
+  wrap.appendChild(canvas);
+  try {
+    await bwipjs.toCanvas(canvas,{
+      bcid,
+      text: content,
+      scale,
+      includetext: true,
+      textxalign: 'center',
+      backgroundcolor: bgHex,
+      barcolor: fgHex,
+      textcolor: fgHex,
+    });
+    const sel = document.getElementById('qr-symbology');
+    const label = sel.options[sel.selectedIndex].text;
+    document.getElementById('out-card-title').textContent = label;
+    document.getElementById('qr-out-card').style.display='block';
+    document.getElementById('qr-out-card').scrollIntoView({behavior:'smooth',block:'nearest'});
+    toast('Code generated!');
+  } catch(e) {
+    toast('Error: '+e.message);
+    console.error(e);
+  }
+});
+document.getElementById('btn-clr-qr').addEventListener('click',()=>{
+  document.getElementById('qrcode').innerHTML='';
+  document.getElementById('qr-out-card').style.display='none';
+});
+function getQRC(){return document.querySelector('#qrcode canvas');}
+document.getElementById('btn-dl').addEventListener('click',()=>{
+  const el=getQRC();if(!el){toast('Generate first');return;}
+  const a=document.createElement('a');a.download='barcode.png';a.href=el.toDataURL('image/png');a.click();toast('Downloaded!');
+});
+document.getElementById('btn-cp-img').addEventListener('click',()=>{
+  const el=getQRC();if(!el){toast('Generate first');return;}
+  el.toBlob(b=>{try{navigator.clipboard.write([new ClipboardItem({'image/png':b})]);toast('Image copied!');}catch{toast('Not supported here');}});
+});
 let qrHist=JSON.parse(localStorage.getItem('qr_hist')||'[]');
 function addHistory(text){qrHist.unshift({text,time:new Date().toLocaleTimeString()});if(qrHist.length>60)qrHist.pop();localStorage.setItem('qr_hist',JSON.stringify(qrHist));}
 function renderHistory(){const list=document.getElementById('hist-list');if(!qrHist.length){list.innerHTML='<li class="empty-state">No scans yet.</li>';return;}list.innerHTML=qrHist.map(h=>`<li class="hist-item"><span class="hist-text">${esc(h.text)}</span><span class="hist-time">${h.time}</span><button class="hist-copy" data-v="${esc(h.text).replace(/"/g,'&quot;')}">📋</button></li>`).join('');list.querySelectorAll('.hist-copy').forEach(b=>b.addEventListener('click',()=>navigator.clipboard.writeText(b.dataset.v).then(()=>toast('Copied!'))));}
