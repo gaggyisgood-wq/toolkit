@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ToolKit</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
+<script src="https://unpkg.com/@zxing/browser@0.1.1/umd/index.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bwip-js@3/dist/bwip-js-min.js" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -565,7 +565,28 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
     <div class="qr-panel on" id="qpanel-scan">
       <div class="qr-card">
         <div class="qr-card-title"><span style="display:flex;align-items:center;gap:5px"><span class="dot" id="cam-dot"></span>Camera</span></div>
-        <select class="fsel" id="fmt-select"><option value="ALL">All formats</option><option value="QR_CODE">QR Code only</option><option value="DATA_MATRIX">Data Matrix only</option></select>
+        <select class="fsel" id="fmt-select">
+          <option value="ALL">All formats (auto-detect)</option>
+          <optgroup label="2D">
+            <option value="QR_CODE">QR Code</option>
+            <option value="DATA_MATRIX">Data Matrix</option>
+            <option value="AZTEC">Aztec</option>
+            <option value="PDF_417">PDF417</option>
+          </optgroup>
+          <optgroup label="1D">
+            <option value="CODE_128">Code 128</option>
+            <option value="CODE_39">Code 39</option>
+            <option value="CODE_93">Code 93</option>
+            <option value="EAN_13">EAN-13</option>
+            <option value="EAN_8">EAN-8</option>
+            <option value="UPC_A">UPC-A</option>
+            <option value="UPC_E">UPC-E</option>
+            <option value="ITF">ITF / Interleaved 2of5</option>
+            <option value="CODABAR">Codabar</option>
+            <option value="RSS_14">GS1 DataBar (RSS-14)</option>
+            <option value="RSS_EXPANDED">GS1 DataBar Expanded</option>
+          </optgroup>
+        </select>
         <div id="qr-reader"><div class="scan-overlay"><div class="scan-frame"><span class="sf-br"></span><span class="sf-bl"></span><div class="scan-line"></div></div></div></div>
         <div class="btn-row" style="margin-top:11px">
           <button class="btn-sm primary" id="btn-cam-start">▶ Start</button>
@@ -1300,9 +1321,70 @@ document.getElementById('btn-back').addEventListener('click',()=>{stopScanner();
   });
 });
 let scanner=null;
-function getFormats(){if(typeof Html5QrcodeSupportedFormats==='undefined')return undefined;const v=document.getElementById('fmt-select').value;if(v==='QR_CODE')return[Html5QrcodeSupportedFormats.QR_CODE];if(v==='DATA_MATRIX')return[Html5QrcodeSupportedFormats.DATA_MATRIX];return[Html5QrcodeSupportedFormats.QR_CODE,Html5QrcodeSupportedFormats.DATA_MATRIX,Html5QrcodeSupportedFormats.CODE_128,Html5QrcodeSupportedFormats.CODE_39,Html5QrcodeSupportedFormats.EAN_13,Html5QrcodeSupportedFormats.EAN_8];}
-function startScanner(){if(scanner||typeof Html5Qrcode==='undefined')return;scanner=new Html5Qrcode('qr-reader');const cfg={fps:15,qrbox:{width:190,height:190}};const fmts=getFormats();if(fmts)cfg.formatsToSupport=fmts;scanner.start({facingMode:'environment'},cfg,text=>{onScan(text);},()=>{}).then(()=>document.getElementById('cam-dot').classList.add('live')).catch(err=>{setResult('Camera error: '+err.message);scanner=null;});}
-function stopScanner(){if(!scanner)return;scanner.stop().then(()=>{scanner.clear();scanner=null;document.getElementById('cam-dot').classList.remove('live');}).catch(()=>{scanner=null;});}
+// ── ZXing scanner ──
+const ZXing = window.ZXingBrowser;
+let videoEl = null;
+
+function getHints(){
+  const v = document.getElementById('fmt-select').value;
+  if(v==='ALL') return null;
+  const FMT = ZXing.BarcodeFormat;
+  const map = {
+    QR_CODE:FMT.QR_CODE, DATA_MATRIX:FMT.DATA_MATRIX, AZTEC:FMT.AZTEC,
+    PDF_417:FMT.PDF_417, CODE_128:FMT.CODE_128, CODE_39:FMT.CODE_39,
+    CODE_93:FMT.CODE_93, EAN_13:FMT.EAN_13, EAN_8:FMT.EAN_8,
+    UPC_A:FMT.UPC_A, UPC_E:FMT.UPC_E, ITF:FMT.ITF,
+    CODABAR:FMT.CODABAR, RSS_14:FMT.RSS_14, RSS_EXPANDED:FMT.RSS_EXPANDED
+  };
+  return map[v] ? [map[v]] : null;
+}
+
+async function startScanner(){
+  if(scanner) return;
+  const readerEl = document.getElementById('qr-reader');
+
+  // Create video element
+  videoEl = document.createElement('video');
+  videoEl.style.cssText = 'width:100%;border-radius:9px;display:block';
+  // Insert before the overlay
+  const overlay = readerEl.querySelector('.scan-overlay');
+  readerEl.insertBefore(videoEl, overlay);
+
+  const hints = getHints();
+  const fmts  = hints ? hints : undefined;
+
+  try {
+    const codeReader = new ZXing.BrowserMultiFormatReader(
+      fmts ? new Map([[ZXing.DecodeHintType.POSSIBLE_FORMATS, fmts]]) : undefined
+    );
+    scanner = codeReader;
+
+    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+    // Prefer back camera
+    const device = devices.find(d=>/(back|rear|environment)/i.test(d.label)) || devices[devices.length-1];
+    const deviceId = device ? device.deviceId : undefined;
+
+    await codeReader.decodeFromVideoDevice(deviceId, videoEl, (result, err) => {
+      if(result){
+        onScan(result.getText());
+      }
+    });
+    document.getElementById('cam-dot').classList.add('live');
+  } catch(err){
+    setResult('Camera error: '+err.message);
+    if(videoEl) videoEl.remove();
+    videoEl = null;
+    scanner = null;
+  }
+}
+
+function stopScanner(){
+  if(!scanner) return;
+  try{ scanner.reset(); } catch(e){}
+  scanner = null;
+  if(videoEl){ videoEl.srcObject=null; videoEl.remove(); videoEl=null; }
+  document.getElementById('cam-dot').classList.remove('live');
+}
 function onScan(text){setResult(text);try{document.getElementById('beep').play();}catch(e){}addHistory(text);}
 function setResult(text){const el=document.getElementById('result-text');el.textContent=text;el.classList.add('val');document.getElementById('result-box').classList.add('hit');}
 document.getElementById('btn-cam-start').addEventListener('click',startScanner);
