@@ -331,6 +331,49 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
   .mobile-menu-btn{display:flex !important}
 }
 .mobile-menu-btn{display:none;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--sub);font-size:1.1rem;width:34px;height:34px;align-items:center;justify-content:center;cursor:pointer}
+
+/* ════ BOOKING ════ */
+.booking-locked{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:14px}
+.booking-locked-icon{font-size:3rem}
+.booking-locked-title{font-size:1.2rem;font-weight:800;letter-spacing:-.3px}
+.booking-locked-sub{font-size:.82rem;color:var(--sub);max-width:300px;line-height:1.6}
+
+.booking-hero{background:linear-gradient(135deg,rgba(0,255,170,.07),rgba(139,92,246,.05));border:1px solid var(--border2);border-radius:18px;padding:28px;margin-bottom:24px;display:flex;align-items:center;gap:20px}
+.booking-hero-icon{font-size:3rem;flex-shrink:0}
+.booking-hero-text h2{font-size:1.3rem;font-weight:900;letter-spacing:-.4px;margin-bottom:4px}
+.booking-hero-text p{font-size:.82rem;color:var(--sub);line-height:1.5}
+
+.slots-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:16px}
+.slot-btn{background:var(--card);border:1.5px solid var(--border);border-radius:11px;color:var(--text);font-family:var(--fh);font-size:.82rem;font-weight:500;padding:12px 8px;cursor:pointer;transition:all .18s;text-align:center}
+.slot-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,255,170,.06)}
+.slot-btn.on{background:rgba(0,255,170,.12);border-color:var(--accent);color:var(--accent);font-weight:700}
+.slot-btn.booked{background:rgba(255,85,102,.06);border-color:rgba(255,85,102,.25);color:var(--danger);cursor:not-allowed;opacity:.6}
+
+.booking-form{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:24px;margin-bottom:16px}
+.date-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.date-nav-btn{background:none;border:1.5px solid var(--border2);border-radius:8px;color:var(--sub);font-family:var(--fh);font-size:.8rem;padding:6px 12px;cursor:pointer;transition:all .18s}
+.date-nav-btn:hover{border-color:var(--accent);color:var(--accent)}
+.date-display{font-size:.95rem;font-weight:700;letter-spacing:-.2px}
+
+.my-bookings-list{display:flex;flex-direction:column;gap:8px}
+.booking-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;animation:boxIn .25s ease}
+.bi-icon{font-size:1.5rem;flex-shrink:0}
+.bi-info{flex:1;min-width:0}
+.bi-title{font-size:.88rem;font-weight:700}
+.bi-meta{font-size:.72rem;color:var(--muted);margin-top:2px}
+.bi-badge{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;flex-shrink:0}
+.bi-badge.pending{background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.22);color:var(--warn)}
+.bi-badge.approved{background:rgba(0,255,170,.08);border:1px solid rgba(0,255,170,.15);color:var(--accent)}
+.bi-badge.rejected{background:rgba(255,85,102,.08);border:1px solid rgba(255,85,102,.2);color:var(--danger)}
+.bi-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* Admin booking items */
+.admin-booking-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;animation:boxIn .25s ease}
+.abi-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--accent));display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#fff;flex-shrink:0}
+.abi-info{flex:1;min-width:0}
+.abi-title{font-size:.85rem;font-weight:700}
+.abi-meta{font-size:.72rem;color:var(--muted);margin-top:2px}
+.abi-actions{display:flex;gap:6px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -512,8 +555,41 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
         <div class="pending-list" id="pending-list"><div class="empty-state">No pending requests 🎉</div></div>
       </div>
       <div class="admin-section">
+        <div class="admin-section-title">➕ Create Account</div>
+        <div class="upload-card">
+          <div class="upload-form" style="margin-bottom:0">
+            <div class="uf"><label>Email</label><input type="email" id="ac-email" placeholder="user@example.com"></div>
+            <div class="uf"><label>Password</label><input type="password" id="ac-pass" placeholder="Min 8 chars"></div>
+            <div class="uf full" style="display:flex;gap:10px;align-items:center;padding-top:4px">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;color:var(--sub)">
+                <input type="checkbox" id="ac-approved" checked style="width:16px;height:16px;accent-color:var(--accent)">
+                Auto-approve (skip pending)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;color:var(--sub)">
+                <input type="checkbox" id="ac-booking" style="width:16px;height:16px;accent-color:var(--accent)">
+                Grant SiuSiu booking
+              </label>
+            </div>
+          </div>
+          <div style="margin-top:14px">
+            <button class="btn-upload" id="btn-create-account" style="background:var(--accent)">➕ Create Account</button>
+          </div>
+          <div class="auth-msg" id="ac-msg" style="margin-top:11px"></div>
+        </div>
+      </div>
+      <div class="admin-section">
         <div class="admin-section-title">All Users</div>
         <div class="users-list" id="users-list"><div class="empty-state">Loading…</div></div>
+      </div>
+      <div class="admin-section" id="admin-booking-section">
+        <div class="admin-section-title">🗓 SiuSiu Bookings</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="booking-filter-row">
+          <button class="btn-sm on" id="bfilter-pending" data-filter="pending" style="flex:none;padding:6px 14px;font-size:.74rem">⏳ Pending</button>
+          <button class="btn-sm" id="bfilter-approved" data-filter="approved" style="flex:none;padding:6px 14px;font-size:.74rem">✅ Approved</button>
+          <button class="btn-sm" id="bfilter-rejected" data-filter="rejected" style="flex:none;padding:6px 14px;font-size:.74rem">✕ Rejected</button>
+          <button class="btn-sm" id="bfilter-all" data-filter="all" style="flex:none;padding:6px 14px;font-size:.74rem">All</button>
+        </div>
+        <div id="admin-bookings-list"><div class="empty-state">Loading…</div></div>
       </div>
       <div class="admin-section">
         <div class="admin-section-title">📋 Activity Log</div>
@@ -547,6 +623,49 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
         <div class="manage-list" id="manage-list"></div>
       </div>
     </div>
+
+    <!-- BOOKING TAB -->
+    <div class="tab-panel" id="tab-booking">
+      <div class="page-heading"><h1>🗓 <em>SiuSiu</em> Time</h1><p>Book your session</p></div>
+      <div id="booking-locked" class="booking-locked" style="display:none">
+        <div class="booking-locked-icon">🔒</div>
+        <div class="booking-locked-title">No Access</div>
+        <div class="booking-locked-sub">You don't have permission to use SiuSiu Time booking. Contact the admin to request access.</div>
+      </div>
+      <div id="booking-content">
+        <div class="booking-hero">
+          <div class="booking-hero-icon">🌟</div>
+          <div class="booking-hero-text">
+            <h2>Book a SiuSiu Session</h2>
+            <p>Pick a date and time slot below. Your booking will be confirmed after admin approval.</p>
+          </div>
+        </div>
+
+        <!-- Date picker -->
+        <div class="booking-form">
+          <div class="date-nav">
+            <button class="date-nav-btn" id="date-prev">← Prev</button>
+            <div class="date-display" id="date-display">—</div>
+            <button class="date-nav-btn" id="date-next">Next →</button>
+          </div>
+          <div class="slots-grid" id="slots-grid"></div>
+          <div class="fl" style="margin-top:12px">
+            <label>Note (optional)</label>
+            <textarea id="booking-note" rows="2" placeholder="Any special requests…" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--fm);font-size:.82rem;padding:11px 14px;outline:none;resize:vertical"></textarea>
+          </div>
+          <div class="btn-row" style="margin-top:12px">
+            <button class="btn-sm primary" id="btn-book">📅 Request Booking</button>
+          </div>
+          <div class="auth-msg" id="booking-msg" style="margin-top:10px"></div>
+        </div>
+
+        <!-- My bookings -->
+        <div style="font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);margin-bottom:12px">My Bookings</div>
+        <div class="my-bookings-list" id="my-bookings-list"><div class="empty-state">No bookings yet</div></div>
+      </div>
+    </div>
+
+  </div>
   </div>
 </div>
 
@@ -913,11 +1032,24 @@ document.getElementById('btn-signup').addEventListener('click', async()=>{
   const {data,error} = await sb.auth.signUp({email,password:pass, options:{ emailRedirectTo:'https://gaggyisgood-wq.github.io/toolkit/' }});
   btn.disabled=false; btn.textContent='Create account';
   if(error){showMsg(authMsg,error.message,'err');return;}
-  if(data?.user){
-    await sb.from('profiles').upsert({id:data.user.id,email,status:'pending',display_name:'',created_at:new Date().toISOString()});
+  // data.user exists when email confirm is OFF, data.session when confirm is ON
+  const newUser = data?.user || data?.session?.user;
+  if(newUser){
+    const {error: profileErr} = await sb.from('profiles').upsert({
+      id: newUser.id,
+      email,
+      status: 'pending',
+      display_name: '',
+      booking_access: false,
+      created_at: new Date().toISOString()
+    });
+    if(profileErr) console.error('Profile create error:', profileErr);
     logActivity('signup',`New signup: ${email}`);
+    showMsg(authMsg,'✅ Account created! Awaiting admin approval.','ok');
+  } else {
+    // Email confirmation flow — profile created on first login instead
+    showMsg(authMsg,'✅ Check your email to confirm your account, then await admin approval.','ok');
   }
-  showMsg(authMsg,'✅ Account created! Awaiting admin approval.','ok');
 });
 
 // Forgot password
@@ -944,24 +1076,62 @@ document.addEventListener('keydown',e=>{
 });
 
 // ══════════ AUTH STATE ══════════
+// ── Detect password recovery link ──
+// Supabase appends #access_token=...&type=recovery to the redirect URL
+let isRecoveryFlow = false;
+(function detectRecovery(){
+  const hash = window.location.hash;
+  if(hash.includes('type=recovery')){
+    isRecoveryFlow = true;
+    // Clean the URL so it doesn't re-trigger on refresh
+    history.replaceState(null,'',window.location.pathname);
+  }
+})();
+
 sb.auth.onAuthStateChange(async(_e,session)=>{
-  if(!session?.user){showPage('auth');currentUser=null;return;}
+  if(!session?.user){
+    // If recovery flow but no session yet, Supabase is still processing — wait
+    if(isRecoveryFlow) return;
+    showPage('auth');currentUser=null;return;
+  }
   currentUser = session.user;
   const email = currentUser.email||'';
   isAdmin = email===ADMIN_EMAIL;
 
-  // Handle password reset redirect
-  if(_e==='PASSWORD_RECOVERY'){
+  // Handle password reset — either event or URL-detected recovery
+  if(_e==='PASSWORD_RECOVERY' || isRecoveryFlow){
+    isRecoveryFlow = false;
     bootApp(currentUser);
-    switchTab('profile');
-    showMsg(document.getElementById('profile-msg'),'Enter your new password below.','info');
+    // Short delay so DOM is ready
+    setTimeout(()=>{
+      switchTab('profile');
+      const msgEl = document.getElementById('profile-msg');
+      if(msgEl) showMsg(msgEl,'🔑 Enter your new password below to reset it.','ok');
+      // Scroll to password section
+      const pwSection = document.getElementById('pf-newpass');
+      if(pwSection) pwSection.scrollIntoView({behavior:'smooth',block:'center'});
+    }, 200);
     return;
   }
 
   if(isAdmin){bootApp(currentUser);logActivity('login',`Admin signed in: ${email}`);return;}
 
-  const {data:profile} = await sb.from('profiles').select('status').eq('id',currentUser.id).single();
-  const status = profile?.status||'pending';
+  let {data:profile} = await sb.from('profiles').select('status,booking_access').eq('id',currentUser.id).single();
+
+  // First login after email confirmation — profile may not exist yet
+  if(!profile){
+    await sb.from('profiles').upsert({
+      id: currentUser.id,
+      email,
+      status: 'pending',
+      display_name: '',
+      booking_access: false,
+      created_at: new Date().toISOString()
+    });
+    profile = {status:'pending',booking_access:false};
+  }
+
+  const status = profile.status||'pending';
 
   if(status==='approved'){
     bootApp(currentUser);
@@ -1027,6 +1197,20 @@ function bootApp(user){
   document.getElementById('user-chip-btn').addEventListener('click',()=>switchTab('profile'));
   document.getElementById('logo-home').addEventListener('click',()=>switchTab('tools'));
 
+  // Check booking access
+  if(!isAdmin){
+    sb.from('profiles').select('booking_access').eq('id',user.id).single().then(({data})=>{
+      if(data?.booking_access){
+        const bb=document.getElementById('nav-booking');
+        if(bb) bb.style.display='';
+      }
+    });
+  } else {
+    // Admin always sees booking
+    const bb=document.getElementById('nav-booking');
+    if(bb) bb.style.display='';
+  }
+
   // Mobile menu
   document.getElementById('mobile-menu-btn').addEventListener('click',()=>{
     nav.style.display = nav.style.display==='flex' ? 'none' : 'flex';
@@ -1052,6 +1236,7 @@ function switchTab(name){
   const panel = document.getElementById('tab-'+name);
   if(panel) panel.classList.add('on');
   if(name==='admin') loadAdminData();
+  if(name==='booking') initBookingTab();
   if(name==='profile') loadProfile(currentUser);
 }
 
@@ -1199,12 +1384,17 @@ async function loadAdminData(){
     const bc=isA?'admin':p.status;
     const bt=isA?'Admin':p.status.charAt(0).toUpperCase()+p.status.slice(1);
     const name=p.display_name?`<div class="ui-name">${esc(p.display_name)}</div>`:'';
+    const bookingToggle=(!isA&&p.status==='approved')?
+      `<button class="btn-mi ${p.booking_access?'del':''}" data-uid="${p.id}" data-booking="${p.booking_access?'false':'true'}" data-email="${esc(p.email)}" title="${p.booking_access?'Revoke booking access':'Grant booking access'}">
+        ${p.booking_access?'🗓 Revoke Booking':'🗓 Grant Booking'}
+      </button>`:'';
     const actions=(!isA)?`<div class="ui-actions">
       ${p.status==='approved'
         ?`<button class="btn-mi del" data-uid="${p.id}" data-action="rejected" data-email="${esc(p.email)}">Revoke</button>`
         :p.status==='pending'
         ?`<button class="btn-mi" data-uid="${p.id}" data-action="approved" data-email="${esc(p.email)}">Approve</button>`
         :`<button class="btn-mi" data-uid="${p.id}" data-action="approved" data-email="${esc(p.email)}">Restore</button>`}
+      ${bookingToggle}
     </div>`:'';
     return `<div class="user-item"><div class="ui-av ${isA?'gold':''}">${p.email.slice(0,2).toUpperCase()}</div><div class="ui-info"><div class="ui-email">${esc(p.email)}</div>${name}<div class="ui-name">${new Date(p.created_at).toLocaleDateString()}</div></div><span class="ui-badge ${bc}">${bt}</span>${actions}</div>`;
   }).join('');
@@ -1212,6 +1402,13 @@ async function loadAdminData(){
     b.disabled=true;
     await sb.from('profiles').update({status:b.dataset.action}).eq('id',b.dataset.uid);
     toast(`${b.dataset.action==='approved'?'✅ Approved':'Revoked'}: ${b.dataset.email}`);
+    loadAdminData();
+  }));
+  uList.querySelectorAll('[data-booking]').forEach(b=>b.addEventListener('click',async()=>{
+    b.disabled=true;
+    const grant = b.dataset.booking==='true';
+    await sb.from('profiles').update({booking_access:grant}).eq('id',b.dataset.uid);
+    toast(`${grant?'🗓 Booking access granted':'🗓 Booking access revoked'}: ${b.dataset.email}`);
     loadAdminData();
   }));
 
@@ -1223,7 +1420,61 @@ async function loadAdminData(){
   document.getElementById('stat-logins').textContent=logs.filter(l=>l.type==='login').length;
 
   renderManageList();
+  loadAdminBookings('pending');
+
+  // Wire booking filter buttons
+  document.getElementById('booking-filter-row').querySelectorAll('[data-filter]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.getElementById('booking-filter-row').querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      loadAdminBookings(b.dataset.filter);
+    });
+  });
 }
+
+// ══════════ ADMIN CREATE ACCOUNT ══════════
+document.getElementById('btn-create-account').addEventListener('click', async()=>{
+  const email    = document.getElementById('ac-email').value.trim();
+  const pass     = document.getElementById('ac-pass').value;
+  const approved = document.getElementById('ac-approved').checked;
+  const booking  = document.getElementById('ac-booking').checked;
+  const msgEl    = document.getElementById('ac-msg');
+  const btn      = document.getElementById('btn-create-account');
+
+  if(!email||!pass){ showMsg(msgEl,'Fill in email and password.','err'); return; }
+  if(pass.length<8){ showMsg(msgEl,'Password must be at least 8 characters.','err'); return; }
+
+  btn.disabled=true; btn.textContent='Creating…';
+  msgEl.className='auth-msg';
+
+  // Use signUp — Supabase creates the user
+  const {data, error} = await sb.auth.signUp({
+    email, password: pass,
+    options:{ emailRedirectTo:'https://gaggyisgood-wq.github.io/toolkit/' }
+  });
+
+  if(error){ btn.disabled=false; btn.textContent='➕ Create Account'; showMsg(msgEl,error.message,'err'); return; }
+
+  const newUser = data?.user || data?.session?.user;
+  if(newUser){
+    await sb.from('profiles').upsert({
+      id: newUser.id,
+      email,
+      status: approved ? 'approved' : 'pending',
+      display_name: '',
+      booking_access: booking,
+      created_at: new Date().toISOString()
+    });
+    logActivity('admin-create', `Admin created account: ${email} (${approved?'approved':'pending'})`);
+    showMsg(msgEl, `✅ Account created for ${email}!`, 'ok');
+    document.getElementById('ac-email').value='';
+    document.getElementById('ac-pass').value='';
+    loadAdminData();
+  } else {
+    showMsg(msgEl,'✅ Account created! User must confirm email before profile is activated.','ok');
+  }
+  btn.disabled=false; btn.textContent='➕ Create Account';
+});
 
 // ══════════ ACTIVITY LOG ══════════
 function logActivity(type,text){
@@ -1508,6 +1759,150 @@ let qrHist=JSON.parse(localStorage.getItem('qr_hist')||'[]');
 function addHistory(text){qrHist.unshift({text,time:new Date().toLocaleTimeString()});if(qrHist.length>60)qrHist.pop();localStorage.setItem('qr_hist',JSON.stringify(qrHist));}
 function renderHistory(){const list=document.getElementById('hist-list');if(!qrHist.length){list.innerHTML='<li class="empty-state">No scans yet.</li>';return;}list.innerHTML=qrHist.map(h=>`<li class="hist-item"><span class="hist-text">${esc(h.text)}</span><span class="hist-time">${h.time}</span><button class="hist-copy" data-v="${esc(h.text).replace(/"/g,'&quot;')}">📋</button></li>`).join('');list.querySelectorAll('.hist-copy').forEach(b=>b.addEventListener('click',()=>navigator.clipboard.writeText(b.dataset.v).then(()=>toast('Copied!'))));}
 document.getElementById('btn-clr-hist').addEventListener('click',()=>{qrHist=[];localStorage.removeItem('qr_hist');renderHistory();toast('Cleared');});
+
+// ══════════ BOOKING SYSTEM ══════════
+const TIME_SLOTS = ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM'];
+let bookingDate = new Date(); bookingDate.setHours(0,0,0,0);
+let selectedSlot = null;
+let takenSlots = [];
+let adminBookingFilter = 'pending';
+
+function fmtDate(d){return d.toLocaleDateString('en-SG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});}
+function isoDate(d){return d.toISOString().split('T')[0];}
+
+async function initBookingTab(){
+  if(!isAdmin){
+    const {data} = await sb.from('profiles').select('booking_access').eq('id',currentUser.id).single();
+    if(!data?.booking_access){
+      document.getElementById('booking-locked').style.display='flex';
+      document.getElementById('booking-content').style.display='none';
+      return;
+    }
+  }
+  document.getElementById('booking-locked').style.display='none';
+  document.getElementById('booking-content').style.display='block';
+  renderDateNav();
+  await loadSlots();
+  loadMyBookings();
+}
+
+function renderDateNav(){
+  document.getElementById('date-display').textContent = fmtDate(bookingDate);
+}
+
+async function loadSlots(){
+  selectedSlot = null;
+  const dateStr = isoDate(bookingDate);
+  const {data} = await sb.from('bookings').select('time_slot,status').eq('date',dateStr).in('status',['approved','pending']);
+  takenSlots = (data||[]).map(b=>b.time_slot);
+  renderSlots();
+}
+
+function renderSlots(){
+  const grid = document.getElementById('slots-grid');
+  if(!grid) return;
+  grid.innerHTML = TIME_SLOTS.map(s=>{
+    const taken = takenSlots.includes(s);
+    const on    = s===selectedSlot;
+    return `<button class="slot-btn ${taken?'booked':''} ${on?'on':''}" data-slot="${s}" ${taken?'disabled':''}>
+      ${s}${taken?' 🔴':''}
+    </button>`;
+  }).join('');
+  grid.querySelectorAll('.slot-btn:not(.booked)').forEach(b=>{
+    b.addEventListener('click',()=>{ selectedSlot=b.dataset.slot; renderSlots(); });
+  });
+}
+
+document.getElementById('date-prev').addEventListener('click',async()=>{
+  const prev=new Date(bookingDate); prev.setDate(prev.getDate()-1);
+  const today=new Date(); today.setHours(0,0,0,0);
+  if(prev<today) return;
+  bookingDate=prev; renderDateNav(); await loadSlots();
+});
+
+document.getElementById('date-next').addEventListener('click',async()=>{
+  bookingDate.setDate(bookingDate.getDate()+1); renderDateNav(); await loadSlots();
+});
+
+document.getElementById('btn-book').addEventListener('click',async()=>{
+  if(!selectedSlot){showMsg(document.getElementById('booking-msg'),'Please select a time slot.','err');return;}
+  const note = document.getElementById('booking-note').value.trim();
+  const btn  = document.getElementById('btn-book');
+  btn.disabled=true; btn.textContent='Requesting…';
+  const {error} = await sb.from('bookings').insert({
+    user_id:    currentUser.id,
+    user_email: currentUser.email,
+    date:       isoDate(bookingDate),
+    time_slot:  selectedSlot,
+    note,
+    status:     'pending'
+  });
+  btn.disabled=false; btn.textContent='📅 Request Booking';
+  if(error){showMsg(document.getElementById('booking-msg'),error.message,'err');return;}
+  showMsg(document.getElementById('booking-msg'),'✅ Booking requested! Waiting for approval.','ok');
+  selectedSlot=null;
+  document.getElementById('booking-note').value='';
+  await loadSlots();
+  loadMyBookings();
+  logActivity('booking',`Booking: ${currentUser.email} — ${isoDate(bookingDate)}`);
+});
+
+async function loadMyBookings(){
+  const {data} = await sb.from('bookings').select('*').eq('user_id',currentUser.id).order('date',{ascending:false});
+  const list = document.getElementById('my-bookings-list');
+  if(!list) return;
+  if(!data||!data.length){list.innerHTML='<div class="empty-state">No bookings yet</div>';return;}
+  list.innerHTML = data.map(b=>`
+    <div class="booking-item">
+      <div class="bi-icon">${b.status==='approved'?'✅':b.status==='rejected'?'❌':'⏳'}</div>
+      <div class="bi-info">
+        <div class="bi-title">${b.date} — ${b.time_slot}</div>
+        <div class="bi-meta">${b.note||'No note'}</div>
+      </div>
+      <span class="bi-badge ${b.status}">${b.status}</span>
+      ${b.status==='pending'?`<div class="bi-actions"><button class="btn-sm danger" data-cancel="${b.id}" style="flex:none;padding:5px 10px;font-size:.72rem">Cancel</button></div>`:''}
+    </div>`).join('');
+  list.querySelectorAll('[data-cancel]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      btn.disabled=true;
+      await sb.from('bookings').delete().eq('id',btn.dataset.cancel);
+      toast('Booking cancelled'); loadMyBookings(); loadSlots();
+    });
+  });
+}
+
+async function loadAdminBookings(filter){
+  adminBookingFilter = filter||adminBookingFilter;
+  const list = document.getElementById('admin-bookings-list');
+  if(!list) return;
+  list.innerHTML='<div class="empty-state">Loading…</div>';
+  let q = sb.from('bookings').select('*').order('date',{ascending:true});
+  if(adminBookingFilter!=='all') q=q.eq('status',adminBookingFilter);
+  const {data} = await q;
+  if(!data||!data.length){list.innerHTML='<div class="empty-state">No bookings</div>';return;}
+  list.innerHTML = data.map(b=>`
+    <div class="admin-booking-item">
+      <div class="abi-av">${b.user_email.slice(0,2).toUpperCase()}</div>
+      <div class="abi-info">
+        <div class="abi-title">${b.date} · ${b.time_slot}</div>
+        <div class="abi-meta">${esc(b.user_email)}${b.note?' · '+esc(b.note):''}</div>
+      </div>
+      <span class="bi-badge ${b.status}">${b.status}</span>
+      ${b.status==='pending'?`<div class="abi-actions">
+        <button class="btn-approve" data-bid="${b.id}" data-baction="approved">✅</button>
+        <button class="btn-reject"  data-bid="${b.id}" data-baction="rejected">✕</button>
+      </div>`:`<div class="abi-actions"><button class="btn-mi del" data-bid="${b.id}" data-baction="delete" style="font-size:.7rem;padding:4px 9px">🗑</button></div>`}
+    </div>`).join('');
+  list.querySelectorAll('[data-baction]').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      btn.disabled=true;
+      if(btn.dataset.baction==='delete') await sb.from('bookings').delete().eq('id',btn.dataset.bid);
+      else await sb.from('bookings').update({status:btn.dataset.baction}).eq('id',btn.dataset.bid);
+      toast(btn.dataset.baction==='approved'?'✅ Approved':btn.dataset.baction==='rejected'?'Rejected':'Deleted');
+      loadAdminBookings();
+    });
+  });
+}
 
 // ══════════ HELPERS ══════════
 function showMsg(el,text,type){el.textContent=text;el.className=`auth-msg ${type}`;}
