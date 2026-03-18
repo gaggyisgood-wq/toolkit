@@ -43,7 +43,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .auth-brand-sub{font-size:.8rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
 .auth-panel{background:var(--surface);border:1px solid var(--border2);border-radius:22px;padding:34px 30px;box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 32px 64px rgba(0,0,0,.45)}
 .auth-tabs{display:flex;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:4px;margin-bottom:24px;gap:3px}
-.auth-tab{flex:1;background:none;border:none;color:var(--sub);font-family:var(--fh);font-size:.84rem;font-weight:500;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .18s}
+.auth-tab{flex:1;background:none;border:none;color:var(--sub);font-family:var(--fh);font-size:.78rem;font-weight:500;padding:8px 6px;border-radius:8px;cursor:pointer;transition:all .18s;white-space:nowrap}
 .auth-tab.on{background:var(--surface);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.35)}
 .field{margin-bottom:15px}
 .field-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
@@ -172,6 +172,13 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
 /* ═══ ADMIN TAB ═══ */
 .admin-section{margin-bottom:32px}
+.admin-folders{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px;padding:6px;background:var(--surface);border:1px solid var(--border2);border-radius:16px}
+.afolder{display:flex;align-items:center;gap:7px;background:none;border:none;color:var(--sub);font-family:var(--fh);font-size:.82rem;font-weight:500;padding:9px 16px;border-radius:11px;cursor:pointer;transition:all .18s;white-space:nowrap;position:relative}
+.afolder:hover{background:var(--card);color:var(--text)}
+.afolder.on{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.08));color:var(--gold);border:1px solid rgba(245,158,11,.25);font-weight:700}
+.afolder-badge{background:var(--danger);color:#fff;font-size:.6rem;font-weight:800;min-width:16px;height:16px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;line-height:1}
+.afolder-panel{display:none;animation:boxIn .25s ease}
+.afolder-panel.on{display:block}
 .admin-section-title{font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:8px}
 .admin-section-title::after{content:'';flex:1;height:1px;background:rgba(245,158,11,.14)}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:11px;margin-bottom:26px}
@@ -391,6 +398,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
       <div class="auth-tabs">
         <button class="auth-tab on" id="atab-login">Sign in</button>
         <button class="auth-tab" id="atab-signup">Sign up</button>
+        <button class="auth-tab" id="atab-magic">✨ Magic Link</button>
         <button class="auth-tab" id="atab-forgot">Forgot</button>
       </div>
 
@@ -436,8 +444,24 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
         <button class="btn-submit" id="btn-signup">Create account</button>
       </div>
 
+      <!-- MAGIC LINK -->
+      <div id="aform-magic" style="display:none">
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:2rem;margin-bottom:8px">✨</div>
+          <div style="font-size:.85rem;color:var(--sub);line-height:1.6">Enter your email and we'll send you a one-click login link. No password needed.</div>
+        </div>
+        <div class="field">
+          <div class="field-row"><label for="ml-email">Email</label></div>
+          <input type="email" id="ml-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <button class="btn-submit" id="btn-magic">✨ Send Magic Link</button>
+      </div>
+
       <!-- FORGOT -->
       <div id="aform-forgot" style="display:none">
+        <div style="text-align:center;margin-bottom:18px">
+          <div style="font-size:.85rem;color:var(--sub);line-height:1.6">Enter your email and we'll send a password reset link.</div>
+        </div>
         <div class="field">
           <div class="field-row"><label for="r-email">Your email</label></div>
           <input type="email" id="r-email" placeholder="you@example.com">
@@ -540,62 +564,110 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
     </div>
     <!-- ADMIN -->
     <div class="tab-panel" id="tab-admin">
-      <div class="page-heading"><h1>⚡ <em>Admin</em></h1><p>Full control</p></div>
-      <div class="admin-section">
-        <div class="admin-section-title">Overview</div>
+      <div class="page-heading"><h1>⚡ <em>Admin</em></h1><p>Full control over everything</p></div>
+
+      <!-- FOLDER NAV -->
+      <div class="admin-folders" id="admin-folders">
+        <button class="afolder on" data-folder="overview">📊 Overview</button>
+        <button class="afolder" data-folder="users">👥 Users</button>
+        <button class="afolder" data-folder="approvals">⏳ Approvals <span class="afolder-badge" id="af-badge-approvals" style="display:none">0</span></button>
+        <button class="afolder" data-folder="bookings">🗓 Bookings</button>
+        <button class="afolder" data-folder="announce">📢 Announce</button>
+        <button class="afolder" data-folder="tools">🔧 Tools</button>
+        <button class="afolder" data-folder="settings">⚙️ Settings</button>
+        <button class="afolder" data-folder="activity">📋 Activity</button>
+      </div>
+
+      <!-- ── OVERVIEW ── -->
+      <div class="afolder-panel on" id="afpanel-overview">
         <div class="stats-grid">
           <div class="stat-card"><div class="stat-num" id="stat-tools">0</div><div class="stat-label">Tools</div></div>
-          <div class="stat-card"><div class="stat-num" id="stat-approved">0</div><div class="stat-label">Users</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-approved">0</div><div class="stat-label">Approved Users</div></div>
           <div class="stat-card"><div class="stat-num warn" id="stat-pending">0</div><div class="stat-label">Pending</div></div>
-          <div class="stat-card"><div class="stat-num purple" id="stat-logins">0</div><div class="stat-label">Total Logins</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-bookings-today">0</div><div class="stat-label">Bookings Today</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-booking-access">0</div><div class="stat-label">Booking Access</div></div>
+          <div class="stat-card"><div class="stat-num" id="stat-banned">0</div><div class="stat-label">Banned</div></div>
         </div>
+        <div class="admin-section-title" style="margin-top:8px">User Quick View</div>
+        <div id="overview-user-table"></div>
       </div>
-      <div class="admin-section">
+
+      <!-- ── USERS ── -->
+      <div class="afolder-panel" id="afpanel-users">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+          <input type="text" id="user-search" placeholder="🔍 Search by email…" style="flex:1;min-width:180px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--fm);font-size:.82rem;padding:9px 13px;outline:none">
+          <select id="user-filter" style="background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--fh);font-size:.8rem;padding:9px 13px;outline:none;cursor:pointer">
+            <option value="all">All users</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
+            <option value="banned">Banned</option>
+          </select>
+        </div>
+        <div class="users-list" id="users-list"><div class="empty-state">Loading…</div></div>
+      </div>
+
+      <!-- ── APPROVALS ── -->
+      <div class="afolder-panel" id="afpanel-approvals">
         <div class="admin-section-title">⏳ Pending Approvals</div>
         <div class="pending-list" id="pending-list"><div class="empty-state">No pending requests 🎉</div></div>
-      </div>
-      <div class="admin-section">
-        <div class="admin-section-title">➕ Create Account</div>
+        <div class="admin-section-title" style="margin-top:24px">➕ Create Account</div>
         <div class="upload-card">
           <div class="upload-form" style="margin-bottom:0">
             <div class="uf"><label>Email</label><input type="email" id="ac-email" placeholder="user@example.com"></div>
             <div class="uf"><label>Password</label><input type="password" id="ac-pass" placeholder="Min 8 chars"></div>
-            <div class="uf full" style="display:flex;gap:10px;align-items:center;padding-top:4px">
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;color:var(--sub)">
-                <input type="checkbox" id="ac-approved" checked style="width:16px;height:16px;accent-color:var(--accent)">
-                Auto-approve (skip pending)
-              </label>
-              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.82rem;color:var(--sub)">
-                <input type="checkbox" id="ac-booking" style="width:16px;height:16px;accent-color:var(--accent)">
-                Grant SiuSiu booking
-              </label>
+            <div class="uf full" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding-top:4px">
+              <label class="check-label"><input type="checkbox" id="ac-approved" checked> Auto-approve</label>
+              <label class="check-label"><input type="checkbox" id="ac-booking"> Grant SiuSiu booking</label>
             </div>
           </div>
           <div style="margin-top:14px">
-            <button class="btn-upload" id="btn-create-account" style="background:var(--accent)">➕ Create Account</button>
+            <button class="btn-sm primary" id="btn-create-account" style="flex:none;padding:12px 24px;font-size:.88rem;font-weight:700;border-radius:11px">➕ Create Account</button>
           </div>
           <div class="auth-msg" id="ac-msg" style="margin-top:11px"></div>
         </div>
       </div>
-      <div class="admin-section">
-        <div class="admin-section-title">All Users</div>
-        <div class="users-list" id="users-list"><div class="empty-state">Loading…</div></div>
-      </div>
-      <div class="admin-section" id="admin-booking-section">
-        <div class="admin-section-title">🗓 SiuSiu Bookings</div>
+
+      <!-- ── BOOKINGS ── -->
+      <div class="afolder-panel" id="afpanel-bookings">
+        <div class="admin-section-title">Manage Bookings</div>
         <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="booking-filter-row">
-          <button class="btn-sm on" id="bfilter-pending" data-filter="pending" style="flex:none;padding:6px 14px;font-size:.74rem">⏳ Pending</button>
-          <button class="btn-sm" id="bfilter-approved" data-filter="approved" style="flex:none;padding:6px 14px;font-size:.74rem">✅ Approved</button>
-          <button class="btn-sm" id="bfilter-rejected" data-filter="rejected" style="flex:none;padding:6px 14px;font-size:.74rem">✕ Rejected</button>
-          <button class="btn-sm" id="bfilter-all" data-filter="all" style="flex:none;padding:6px 14px;font-size:.74rem">All</button>
+          <button class="btn-sm on" data-filter="pending" style="flex:none;padding:6px 14px;font-size:.74rem">⏳ Pending</button>
+          <button class="btn-sm" data-filter="approved" style="flex:none;padding:6px 14px;font-size:.74rem">✅ Approved</button>
+          <button class="btn-sm" data-filter="rejected" style="flex:none;padding:6px 14px;font-size:.74rem">✕ Rejected</button>
+          <button class="btn-sm" data-filter="all" style="flex:none;padding:6px 14px;font-size:.74rem">All</button>
         </div>
         <div id="admin-bookings-list"><div class="empty-state">Loading…</div></div>
+
+        <div class="admin-section-title" style="margin-top:24px">⏰ Customise Time Slots</div>
+        <div class="upload-card">
+          <p style="font-size:.78rem;color:var(--sub);margin-bottom:12px">Add or remove available booking times. One per line, e.g. <code style="background:var(--card);padding:1px 6px;border-radius:4px;color:var(--accent)">9:00 AM</code></p>
+          <textarea id="slots-editor" rows="8" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--fm);font-size:.82rem;padding:12px 14px;outline:none;resize:vertical"></textarea>
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="btn-sm primary" id="btn-save-slots" style="flex:none">💾 Save Slots</button>
+            <button class="btn-sm" id="btn-reset-slots" style="flex:none">↺ Reset to Default</button>
+          </div>
+          <div class="auth-msg" id="slots-msg" style="margin-top:10px"></div>
+        </div>
       </div>
-      <div class="admin-section">
-        <div class="admin-section-title">📋 Activity Log</div>
-        <div class="activity-list" id="activity-list"><div class="empty-state">No activity yet</div></div>
+
+      <!-- ── ANNOUNCE ── -->
+      <div class="afolder-panel" id="afpanel-announce">
+        <div class="admin-section-title">📢 Broadcast Announcement</div>
+        <div class="upload-card">
+          <div class="fl"><label>Message</label><textarea id="announce-text" rows="3" placeholder="Write your announcement…" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--fm);font-size:.85rem;padding:12px 14px;outline:none;resize:vertical"></textarea></div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn-sm primary" id="btn-announce-send" style="flex:none">📢 Broadcast to All</button>
+            <button class="btn-sm danger" id="btn-announce-clear" style="flex:none">🗑 Clear Active</button>
+          </div>
+          <div class="auth-msg" id="announce-msg" style="margin-top:10px"></div>
+        </div>
+        <div class="admin-section-title" style="margin-top:20px">Active Announcements</div>
+        <div id="announce-list"><div class="empty-state">None active</div></div>
       </div>
-      <div class="admin-section">
+
+      <!-- ── TOOLS ── -->
+      <div class="afolder-panel" id="afpanel-tools">
         <div class="admin-section-title">Upload New Tool</div>
         <div class="upload-card">
           <div class="upload-drop" id="upload-drop">
@@ -617,11 +689,35 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
           <button class="btn-upload" id="btn-upload-tool">⬆ Add to Dashboard</button>
           <div class="auth-msg" id="upload-msg" style="margin-top:11px"></div>
         </div>
-      </div>
-      <div class="admin-section">
-        <div class="admin-section-title">Manage Tools</div>
+        <div class="admin-section-title" style="margin-top:24px">Manage Tools</div>
         <div class="manage-list" id="manage-list"></div>
       </div>
+
+      <!-- ── SETTINGS ── -->
+      <div class="afolder-panel" id="afpanel-settings">
+        <div class="upload-card">
+          <div class="upload-form">
+            <div class="uf full"><label>Site Name</label><input type="text" id="cfg-name" placeholder="ToolKit"></div>
+            <div class="uf full"><label>Welcome Message (shown on dashboard)</label><input type="text" id="cfg-welcome" placeholder="Welcome back!"></div>
+            <div class="uf full"><label>Logo Emoji</label><input type="text" id="cfg-logo" placeholder="🛠" maxlength="4"></div>
+            <div class="uf full"><label>Accent Colour</label><input type="color" id="cfg-accent" value="#00ffaa" style="width:100%;height:44px;border-radius:10px;border:1.5px solid var(--border);background:none;cursor:pointer;padding:4px"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="btn-sm primary" id="btn-save-settings" style="flex:none">💾 Save Settings</button>
+            <button class="btn-sm" id="btn-reset-settings" style="flex:none">↺ Reset</button>
+          </div>
+          <div class="auth-msg" id="settings-msg" style="margin-top:10px"></div>
+        </div>
+      </div>
+
+      <!-- ── ACTIVITY ── -->
+      <div class="afolder-panel" id="afpanel-activity">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button class="btn-sm danger" id="btn-clear-activity" style="flex:none;padding:6px 14px;font-size:.74rem">🗑 Clear Log</button>
+        </div>
+        <div class="activity-list" id="activity-list"><div class="empty-state">No activity yet</div></div>
+      </div>
+
     </div>
 
     <!-- BOOKING TAB -->
@@ -964,21 +1060,24 @@ function showPage(id){
 // ══════════ AUTH ══════════
 let authTab = 'login';
 const authMsg = document.getElementById('auth-msg');
-const tabs = {login:'aform-login', signup:'aform-signup', forgot:'aform-forgot'};
-const tabBtns = {login:'atab-login', signup:'atab-signup', forgot:'atab-forgot'};
+const tabs    = {login:'aform-login', signup:'aform-signup', magic:'aform-magic', forgot:'aform-forgot'};
+const tabBtns = {login:'atab-login',  signup:'atab-signup',  magic:'atab-magic',  forgot:'atab-forgot'};
 
 function setAuthTab(t){
   authTab = t;
   Object.keys(tabs).forEach(k=>{
-    document.getElementById(tabs[k]).style.display = k===t ? 'block' : 'none';
-    document.getElementById(tabBtns[k]).classList.toggle('on', k===t);
+    const form = document.getElementById(tabs[k]);
+    const btn  = document.getElementById(tabBtns[k]);
+    if(form) form.style.display = k===t ? 'block' : 'none';
+    if(btn)  btn.classList.toggle('on', k===t);
   });
   authMsg.className='auth-msg';
   authMsg.textContent='';
 }
-document.getElementById('atab-login').addEventListener('click',()=>setAuthTab('login'));
-document.getElementById('atab-signup').addEventListener('click',()=>setAuthTab('signup'));
-document.getElementById('atab-forgot').addEventListener('click',()=>setAuthTab('forgot'));
+document.getElementById('atab-login').addEventListener('click',  ()=>setAuthTab('login'));
+document.getElementById('atab-signup').addEventListener('click', ()=>setAuthTab('signup'));
+document.getElementById('atab-magic').addEventListener('click',  ()=>setAuthTab('magic'));
+document.getElementById('atab-forgot').addEventListener('click', ()=>setAuthTab('forgot'));
 document.getElementById('forgot-shortcut').addEventListener('click',()=>setAuthTab('forgot'));
 
 // Eye toggles
@@ -1066,12 +1165,28 @@ document.getElementById('btn-reset').addEventListener('click', async()=>{
   else showMsg(authMsg,'✅ Reset link sent! Check your inbox.','ok');
 });
 
+// Magic link (passwordless OTP)
+document.getElementById('btn-magic').addEventListener('click', async()=>{
+  const email = document.getElementById('ml-email').value.trim();
+  if(!email){showMsg(authMsg,'Enter your email address.','err');return;}
+  const btn = document.getElementById('btn-magic');
+  btn.disabled=true; btn.textContent='Sending…'; authMsg.className='auth-msg';
+  const {error} = await sb.auth.signInWithOtp({
+    email,
+    options:{ emailRedirectTo:'https://gaggyisgood-wq.github.io/toolkit/' }
+  });
+  btn.disabled=false; btn.textContent='✨ Send Magic Link';
+  if(error) showMsg(authMsg,error.message,'err');
+  else showMsg(authMsg,'✅ Magic link sent! Check your inbox and click the link to sign in.','ok');
+});
+
 // Enter key
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter') return;
   if(!document.getElementById('page-auth').classList.contains('active')) return;
-  if(authTab==='login') document.getElementById('btn-login').click();
+  if(authTab==='login')   document.getElementById('btn-login').click();
   else if(authTab==='signup') document.getElementById('btn-signup').click();
+  else if(authTab==='magic')  document.getElementById('btn-magic').click();
   else if(authTab==='forgot') document.getElementById('btn-reset').click();
 });
 
@@ -1089,11 +1204,20 @@ let isRecoveryFlow = false;
 })();
 
 sb.auth.onAuthStateChange(async(_e,session)=>{
+  // Ignore token refresh events when already logged in — prevents admin being kicked
+  if(_e==='TOKEN_REFRESHED' && currentUser) return;
+
   if(!session?.user){
-    // If recovery flow but no session yet, Supabase is still processing — wait
     if(isRecoveryFlow) return;
     showPage('auth');currentUser=null;return;
   }
+
+  // If already logged in as same user and just a SIGNED_IN refresh, ignore
+  // BUT don't ignore if currentUser is null (e.g. magic link first login)
+  if(currentUser && currentUser.id === session.user.id && _e==='SIGNED_IN') return;
+  // Handle magic link: Supabase fires SIGNED_IN after OTP click
+  // No special treatment needed — falls through to normal flow below
+
   currentUser = session.user;
   const email = currentUser.email||'';
   isAdmin = email===ADMIN_EMAIL;
@@ -1136,6 +1260,11 @@ sb.auth.onAuthStateChange(async(_e,session)=>{
   if(status==='approved'){
     bootApp(currentUser);
     logActivity('login',`User signed in: ${email}`);
+  } else if(status==='banned'){
+    // Banned users — sign them out immediately
+    await sb.auth.signOut();
+    showPage('auth');
+    showMsg(document.getElementById('auth-msg'),'🚫 Your account has been banned. Contact the admin.','err');
   } else {
     showPendingScreen(email,status);
   }
@@ -1188,9 +1317,11 @@ function bootApp(user){
     nav.appendChild(ab);
   }
 
-  // Nav wiring
+  // Nav wiring — replace buttons to clear any old listeners
   nav.querySelectorAll('.nav-btn').forEach(b=>{
-    b.addEventListener('click',()=>switchTab(b.dataset.tab));
+    const clone = b.cloneNode(true);
+    b.replaceWith(clone);
+    clone.addEventListener('click',()=>switchTab(clone.dataset.tab));
   });
 
   // User chip → profile
@@ -1227,10 +1358,12 @@ function bootApp(user){
 
   loadProfile(user);
   renderGrid();
+  checkAnnouncements();
   showPage('app');
 }
 
 function switchTab(name){
+  // Re-query after potential cloneNode replacements
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
   const panel = document.getElementById('tab-'+name);
@@ -1337,20 +1470,39 @@ function renderGrid(){
 }
 
 // ══════════ ADMIN DATA ══════════
+// ── admin profiles cache ──
+let _profiles = [];
+
 async function loadAdminData(){
   const {data:profiles} = await sb.from('profiles').select('*').order('created_at',{ascending:false});
   if(!profiles) return;
+  _profiles = profiles;
+
   const pending  = profiles.filter(p=>p.status==='pending');
   const approved = profiles.filter(p=>p.status==='approved');
+  const banned   = profiles.filter(p=>p.status==='banned');
+  const withBook = profiles.filter(p=>p.booking_access);
 
-  document.getElementById('stat-pending').textContent  = pending.length;
-  document.getElementById('stat-approved').textContent = approved.length;
+  // Stats
+  document.getElementById('stat-pending').textContent      = pending.length;
+  document.getElementById('stat-approved').textContent     = approved.length;
+  document.getElementById('stat-banned').textContent       = banned.length;
+  document.getElementById('stat-booking-access').textContent = withBook.length;
+  document.getElementById('stat-tools').textContent        = allTools().length;
 
-  // Badge dot on admin btn
+  // Pending bookings today
+  const today = new Date().toISOString().split('T')[0];
+  const {data:todayB} = await sb.from('bookings').select('id',{count:'exact'}).eq('date',today);
+  document.getElementById('stat-bookings-today').textContent = todayB?.length||0;
+
+  // Notif dot
   const ab=document.getElementById('nav-admin');
   if(ab){ let d=ab.querySelector('.notif-dot'); if(pending.length){if(!d){d=document.createElement('span');d.className='notif-dot';ab.appendChild(d);}}else{if(d)d.remove();} }
+  // Approvals badge
+  const afb=document.getElementById('af-badge-approvals');
+  if(afb){ afb.style.display=pending.length?'':'none'; afb.textContent=pending.length; }
 
-  // Pending
+  // Pending list
   const pList=document.getElementById('pending-list');
   if(!pending.length){ pList.innerHTML='<div class="empty-state">No pending requests 🎉</div>'; }
   else {
@@ -1360,77 +1512,234 @@ async function loadAdminData(){
         <div class="pi-info"><div class="pi-email">${esc(p.email)}</div><div class="pi-time">${new Date(p.created_at).toLocaleString()}</div></div>
         <div class="pi-actions">
           <button class="btn-approve" data-uid="${p.id}" data-email="${esc(p.email)}">✅ Approve</button>
-          <button class="btn-reject" data-uid="${p.id}" data-email="${esc(p.email)}">✕ Reject</button>
+          <button class="btn-reject"  data-uid="${p.id}" data-email="${esc(p.email)}">✕ Reject</button>
         </div>
       </div>`).join('');
     pList.querySelectorAll('.btn-approve').forEach(b=>b.addEventListener('click',async()=>{
       b.disabled=true;b.textContent='…';
       await sb.from('profiles').update({status:'approved'}).eq('id',b.dataset.uid);
-      logActivity('approve',`Approved: ${b.dataset.email}`);
-      toast(`✅ ${b.dataset.email} approved`); loadAdminData();
+      logActivity('approve',`Approved: ${b.dataset.email}`); toast(`✅ ${b.dataset.email} approved`); loadAdminData();
     }));
     pList.querySelectorAll('.btn-reject').forEach(b=>b.addEventListener('click',async()=>{
       b.disabled=true;b.textContent='…';
       await sb.from('profiles').update({status:'rejected'}).eq('id',b.dataset.uid);
-      logActivity('reject',`Rejected: ${b.dataset.email}`);
-      toast(`Rejected ${b.dataset.email}`); loadAdminData();
+      logActivity('reject',`Rejected: ${b.dataset.email}`); toast(`Rejected ${b.dataset.email}`); loadAdminData();
     }));
   }
 
-  // All users
+  // All users — full control
+  renderUsersList(profiles);
+
+  // Overview quick table
+  renderOverviewTable(profiles);
+
+  // Activity
+  renderActivityLog();
+  renderManageList();
+  loadAdminBookings('pending');
+  loadAnnouncements();
+
+  // Wire booking filter buttons (once)
+  document.getElementById('booking-filter-row').querySelectorAll('[data-filter]').forEach(b=>{
+    b.onclick=()=>{
+      document.getElementById('booking-filter-row').querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); loadAdminBookings(b.dataset.filter);
+    };
+  });
+
+  // Re-apply active folder panel after render (prevents panels going blank)
+  switchAdminFolder(_currentAdminFolder);
+}
+
+function renderOverviewTable(profiles){
+  const el=document.getElementById('overview-user-table');
+  if(!el) return;
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:.78rem">
+    <thead><tr style="color:var(--muted);text-align:left">
+      <th style="padding:8px 10px">User</th>
+      <th style="padding:8px 10px">Status</th>
+      <th style="padding:8px 10px">🗓 Booking</th>
+      <th style="padding:8px 10px">Joined</th>
+    </tr></thead>
+    <tbody>${profiles.map(p=>`
+      <tr style="border-top:1px solid var(--border)">
+        <td style="padding:8px 10px;font-weight:600">${esc(p.email)}</td>
+        <td style="padding:8px 10px"><span class="ui-badge ${p.email===ADMIN_EMAIL?'admin':p.status}" style="font-size:.62rem">${p.email===ADMIN_EMAIL?'Admin':p.status}</span></td>
+        <td style="padding:8px 10px">${p.booking_access?'✅':'—'}</td>
+        <td style="padding:8px 10px;color:var(--muted)">${new Date(p.created_at).toLocaleDateString()}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+  <div style="margin-top:12px;display:flex;gap:8px">
+    <button class="btn-sm" id="btn-export-csv" style="flex:none;font-size:.75rem">⬇ Export CSV</button>
+  </div>`;
+  document.getElementById('btn-export-csv').addEventListener('click',()=>exportCSV(profiles));
+}
+
+function exportCSV(profiles){
+  const rows=[['Email','Status','Booking Access','Joined'],...profiles.map(p=>[p.email,p.status,p.booking_access?'yes':'no',new Date(p.created_at).toLocaleDateString()])];
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='users.csv';a.click();
+  toast('CSV exported!');
+}
+
+function renderUsersList(profiles){
   const uList=document.getElementById('users-list');
+  if(!uList) return;
   uList.innerHTML=profiles.map(p=>{
     const isA=p.email===ADMIN_EMAIL;
     const bc=isA?'admin':p.status;
     const bt=isA?'Admin':p.status.charAt(0).toUpperCase()+p.status.slice(1);
-    const name=p.display_name?`<div class="ui-name">${esc(p.display_name)}</div>`:'';
-    const bookingToggle=(!isA&&p.status==='approved')?
-      `<button class="btn-mi ${p.booking_access?'del':''}" data-uid="${p.id}" data-booking="${p.booking_access?'false':'true'}" data-email="${esc(p.email)}" title="${p.booking_access?'Revoke booking access':'Grant booking access'}">
-        ${p.booking_access?'🗓 Revoke Booking':'🗓 Grant Booking'}
-      </button>`:'';
-    const actions=(!isA)?`<div class="ui-actions">
-      ${p.status==='approved'
-        ?`<button class="btn-mi del" data-uid="${p.id}" data-action="rejected" data-email="${esc(p.email)}">Revoke</button>`
-        :p.status==='pending'
-        ?`<button class="btn-mi" data-uid="${p.id}" data-action="approved" data-email="${esc(p.email)}">Approve</button>`
-        :`<button class="btn-mi" data-uid="${p.id}" data-action="approved" data-email="${esc(p.email)}">Restore</button>`}
-      ${bookingToggle}
-    </div>`:'';
-    return `<div class="user-item"><div class="ui-av ${isA?'gold':''}">${p.email.slice(0,2).toUpperCase()}</div><div class="ui-info"><div class="ui-email">${esc(p.email)}</div>${name}<div class="ui-name">${new Date(p.created_at).toLocaleDateString()}</div></div><span class="ui-badge ${bc}">${bt}</span>${actions}</div>`;
+    if(isA) return `<div class="user-item">
+      <div class="ui-av gold">${p.email.slice(0,2).toUpperCase()}</div>
+      <div class="ui-info"><div class="ui-email">${esc(p.email)}</div><div class="ui-name">Admin account</div></div>
+      <span class="ui-badge admin">Admin</span>
+    </div>`;
+    return `<div class="user-item" id="ui-${p.id}">
+      <div class="ui-av">${p.email.slice(0,2).toUpperCase()}</div>
+      <div class="ui-info">
+        <div class="ui-email">${esc(p.email)}</div>
+        <div class="ui-name">${p.display_name||''} · Joined ${new Date(p.created_at).toLocaleDateString()}</div>
+      </div>
+      <span class="ui-badge ${bc}">${bt}</span>
+      <div class="ui-actions" style="flex-wrap:wrap;gap:5px">
+        ${p.status==='approved'
+          ?`<button class="btn-mi del"   data-uid="${p.id}" data-action="rejected"  data-email="${esc(p.email)}">Revoke</button>`
+          :p.status==='banned'
+          ?`<button class="btn-mi"       data-uid="${p.id}" data-action="approved"  data-email="${esc(p.email)}">Unban</button>`
+          :p.status==='pending'
+          ?`<button class="btn-mi"       data-uid="${p.id}" data-action="approved"  data-email="${esc(p.email)}">Approve</button>`
+          :`<button class="btn-mi"       data-uid="${p.id}" data-action="approved"  data-email="${esc(p.email)}">Restore</button>`}
+        ${p.status!=='banned'?`<button class="btn-mi del" data-uid="${p.id}" data-action="banned" data-email="${esc(p.email)}">🚫 Ban</button>`:''}
+        <button class="btn-mi ${p.booking_access?'del':''}" data-uid="${p.id}" data-booking="${p.booking_access?'false':'true'}" data-email="${esc(p.email)}">${p.booking_access?'🗓 Revoke':'🗓 Grant'}</button>
+        <button class="btn-mi" data-uid="${p.id}" data-edit="${esc(p.email)}" data-dn="${esc(p.display_name||'')}">✏️ Edit</button>
+        <button class="btn-mi" data-uid="${p.id}" data-freset="${esc(p.email)}">🔑 Reset PW</button>
+        <button class="btn-mi del" data-uid="${p.id}" data-delete="${esc(p.email)}">🗑 Delete</button>
+      </div>
+    </div>`;
   }).join('');
+
+  // Status actions
   uList.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',async()=>{
     b.disabled=true;
-    await sb.from('profiles').update({status:b.dataset.action}).eq('id',b.dataset.uid);
-    toast(`${b.dataset.action==='approved'?'✅ Approved':'Revoked'}: ${b.dataset.email}`);
+    const action=b.dataset.action;
+    await sb.from('profiles').update({status:action}).eq('id',b.dataset.uid);
+    logActivity(action,`${action==='approved'?'Approved':action==='banned'?'Banned':'Status changed'}: ${b.dataset.email}`);
+    toast(`${action==='approved'?'✅':action==='banned'?'🚫':'↩'} ${b.dataset.email}`);
     loadAdminData();
   }));
+
+  // Booking toggle
   uList.querySelectorAll('[data-booking]').forEach(b=>b.addEventListener('click',async()=>{
     b.disabled=true;
-    const grant = b.dataset.booking==='true';
+    const grant=b.dataset.booking==='true';
     await sb.from('profiles').update({booking_access:grant}).eq('id',b.dataset.uid);
-    toast(`${grant?'🗓 Booking access granted':'🗓 Booking access revoked'}: ${b.dataset.email}`);
+    toast(`${grant?'🗓 Granted':'🗓 Revoked'}: ${b.dataset.email}`);
     loadAdminData();
   }));
 
-  // Activity
-  renderActivityLog();
+  // Edit user
+  uList.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>{
+    openUserEditModal(b.dataset.uid, b.dataset.edit, b.dataset.dn);
+  }));
 
-  // Total logins stat
-  const logs=JSON.parse(localStorage.getItem('tk_activity_log')||'[]');
-  document.getElementById('stat-logins').textContent=logs.filter(l=>l.type==='login').length;
-
-  renderManageList();
-  loadAdminBookings('pending');
-
-  // Wire booking filter buttons
-  document.getElementById('booking-filter-row').querySelectorAll('[data-filter]').forEach(b=>{
-    b.addEventListener('click',()=>{
-      document.getElementById('booking-filter-row').querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('on'));
-      b.classList.add('on');
-      loadAdminBookings(b.dataset.filter);
+  // Wire search + filter (re-filter from cache, no extra DB call)
+  const searchEl = document.getElementById('user-search');
+  const filterEl = document.getElementById('user-filter');
+  function applyUserFilter(){
+    const q   = searchEl.value.toLowerCase();
+    const f   = filterEl.value;
+    const filtered = _profiles.filter(p=>{
+      const matchSearch = !q || p.email.toLowerCase().includes(q) || (p.display_name||'').toLowerCase().includes(q);
+      const matchFilter = f==='all' || p.status===f;
+      return matchSearch && matchFilter;
     });
-  });
+    renderUsersList(filtered);
+  }
+  // Remove old listeners by replacing elements
+  const newSearch = searchEl.cloneNode(true);
+  const newFilter = filterEl.cloneNode(true);
+  searchEl.replaceWith(newSearch);
+  filterEl.replaceWith(newFilter);
+  newSearch.addEventListener('input', applyUserFilter);
+  newFilter.addEventListener('change', applyUserFilter);
+
+  // Force reset password
+  uList.querySelectorAll('[data-freset]').forEach(b=>b.addEventListener('click',async()=>{
+    if(!confirm(`Send password reset email to ${b.dataset.freset}?`)) return;
+    b.disabled=true;
+    const {error}=await sb.auth.resetPasswordForEmail(b.dataset.freset,{redirectTo:'https://gaggyisgood-wq.github.io/toolkit/'});
+    b.disabled=false;
+    if(error) toast('Error: '+error.message);
+    else { toast(`🔑 Reset email sent to ${b.dataset.freset}`); logActivity('reset',`Password reset sent: ${b.dataset.freset}`); }
+  }));
+
+  // Delete user
+  uList.querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',async()=>{
+    if(!confirm(`DELETE account ${b.dataset.delete}? This removes their profile. Their auth account remains until cleared from Supabase dashboard.`)) return;
+    b.disabled=true;
+    await sb.from('profiles').delete().eq('id',b.dataset.uid);
+    logActivity('delete',`Profile deleted: ${b.dataset.delete}`);
+    toast(`🗑 ${b.dataset.delete} deleted`);
+    loadAdminData();
+  }));
 }
+
+// User edit modal
+function openUserEditModal(uid, email, dn){
+  let modal=document.getElementById('user-edit-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='user-edit-modal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML=`<div style="background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:28px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.5)">
+      <div style="font-size:1rem;font-weight:800;margin-bottom:20px">✏️ Edit User</div>
+      <div class="fl" style="margin-bottom:12px"><label class="form-label" style="font-size:.7rem;color:var(--sub);letter-spacing:.08em;text-transform:uppercase;display:block;margin-bottom:6px">Display Name</label>
+        <input id="modal-dn" type="text" placeholder="Display name" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--fm);font-size:.85rem;padding:11px 14px;outline:none">
+      </div>
+      <div id="modal-msg" class="auth-msg"></div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button id="modal-save" class="btn-sm primary">💾 Save</button>
+        <button id="modal-cancel" class="btn-sm">Cancel</button>
+      </div>
+    </div>`;
+    document.body.appendChild(modal);
+  }
+  modal.style.display='flex';
+  modal.querySelector('#modal-dn').value=dn||'';
+  modal._uid=uid; modal._email=email;
+  modal.querySelector('#modal-cancel').onclick=()=>modal.style.display='none';
+  modal.onclick=e=>{if(e.target===modal)modal.style.display='none';};
+  modal.querySelector('#modal-save').onclick=async()=>{
+    const newDn=modal.querySelector('#modal-dn').value.trim();
+    const msgEl=modal.querySelector('#modal-msg');
+    const btn=modal.querySelector('#modal-save');
+    btn.disabled=true;btn.textContent='Saving…';
+    const {error}=await sb.from('profiles').update({display_name:newDn}).eq('id',modal._uid);
+    btn.disabled=false;btn.textContent='💾 Save';
+    if(error){showMsg(msgEl,error.message,'err');return;}
+    logActivity('edit',`Edited user: ${modal._email}`);
+    toast('✅ User updated'); modal.style.display='none'; loadAdminData();
+  };
+}
+
+// ══════════ ADMIN FOLDER NAV ══════════
+let _currentAdminFolder = 'overview';
+
+function switchAdminFolder(name){
+  _currentAdminFolder = name;
+  document.querySelectorAll('.afolder').forEach(b=>b.classList.toggle('on', b.dataset.folder===name));
+  document.querySelectorAll('.afolder-panel').forEach(p=>p.classList.remove('on'));
+  const panel = document.getElementById('afpanel-'+name);
+  if(panel) panel.classList.add('on');
+}
+
+// Wire on DOM ready (buttons exist from HTML)
+document.getElementById('admin-folders').addEventListener('click', e=>{
+  const btn = e.target.closest('.afolder');
+  if(!btn) return;
+  switchAdminFolder(btn.dataset.folder);
+});
 
 // ══════════ ADMIN CREATE ACCOUNT ══════════
 document.getElementById('btn-create-account').addEventListener('click', async()=>{
@@ -1447,34 +1756,182 @@ document.getElementById('btn-create-account').addEventListener('click', async()=
   btn.disabled=true; btn.textContent='Creating…';
   msgEl.className='auth-msg';
 
-  // Use signUp — Supabase creates the user
-  const {data, error} = await sb.auth.signUp({
-    email, password: pass,
-    options:{ emailRedirectTo:'https://gaggyisgood-wq.github.io/toolkit/' }
+  // ── Use Supabase Admin REST API so we don't disturb the current admin session ──
+  // Step 1: Create the auth user via admin endpoint
+  const SUPA_URL = 'https://mnrcgdbrmhuqkzegiftl.supabase.co';
+  const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ucmNnZGJybWh1cWt6ZWdpZnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzMxMTcsImV4cCI6MjA4OTE0OTExN30.-X3bROxpXBczhYquZWiIdzziL-G07ywslvh2Hmthdho';
+
+  // Get current admin session token
+  const { data: { session: adminSession } } = await sb.auth.getSession();
+  if(!adminSession){ showMsg(msgEl,'Admin session expired. Please re-login.','err'); btn.disabled=false; btn.textContent='➕ Create Account'; return; }
+
+  // Call Supabase admin API to create user without affecting current session
+  const res = await fetch(`${SUPA_URL}/auth/v1/admin/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPA_ANON,
+      'Authorization': `Bearer ${adminSession.access_token}`
+    },
+    body: JSON.stringify({
+      email,
+      password: pass,
+      email_confirm: true  // skip email confirmation
+    })
   });
 
-  if(error){ btn.disabled=false; btn.textContent='➕ Create Account'; showMsg(msgEl,error.message,'err'); return; }
+  const result = await res.json();
 
-  const newUser = data?.user || data?.session?.user;
-  if(newUser){
-    await sb.from('profiles').upsert({
-      id: newUser.id,
-      email,
-      status: approved ? 'approved' : 'pending',
-      display_name: '',
-      booking_access: booking,
-      created_at: new Date().toISOString()
-    });
-    logActivity('admin-create', `Admin created account: ${email} (${approved?'approved':'pending'})`);
+  if(!res.ok || result.error){
+    const errMsg = result.error?.message || result.msg || 'Failed to create user';
+    showMsg(msgEl, errMsg, 'err');
+    btn.disabled=false; btn.textContent='➕ Create Account';
+    return;
+  }
+
+  const newUserId = result.id;
+
+  // Step 2: Create profile row
+  const { error: profileErr } = await sb.from('profiles').upsert({
+    id: newUserId,
+    email,
+    status: approved ? 'approved' : 'pending',
+    display_name: '',
+    booking_access: booking,
+    created_at: new Date().toISOString()
+  });
+
+  if(profileErr){ showMsg(msgEl,'User created but profile failed: '+profileErr.message,'warn'); }
+  else {
+    logActivity('admin-create', `Admin created: ${email} (${approved?'approved':'pending'})`);
     showMsg(msgEl, `✅ Account created for ${email}!`, 'ok');
     document.getElementById('ac-email').value='';
     document.getElementById('ac-pass').value='';
     loadAdminData();
-  } else {
-    showMsg(msgEl,'✅ Account created! User must confirm email before profile is activated.','ok');
   }
+
   btn.disabled=false; btn.textContent='➕ Create Account';
 });
+
+// ══════════ SETTINGS ══════════
+(function loadSettings(){
+  const cfg=JSON.parse(localStorage.getItem('tk_site_cfg')||'{}');
+  if(cfg.name) document.getElementById('cfg-name').value=cfg.name;
+  if(cfg.welcome) document.getElementById('cfg-welcome').value=cfg.welcome;
+  if(cfg.logo) document.getElementById('cfg-logo').value=cfg.logo;
+  if(cfg.accent){ document.getElementById('cfg-accent').value=cfg.accent; document.documentElement.style.setProperty('--accent',cfg.accent); }
+})();
+
+document.getElementById('btn-save-settings').addEventListener('click',()=>{
+  const cfg={
+    name:    document.getElementById('cfg-name').value.trim()||'ToolKit',
+    welcome: document.getElementById('cfg-welcome').value.trim(),
+    logo:    document.getElementById('cfg-logo').value.trim()||'🛠',
+    accent:  document.getElementById('cfg-accent').value
+  };
+  localStorage.setItem('tk_site_cfg',JSON.stringify(cfg));
+  document.documentElement.style.setProperty('--accent',cfg.accent);
+  // Update topbar logo text
+  const logoEls=document.querySelectorAll('.topbar-logo,.auth-brand-name');
+  logoEls.forEach(el=>{ if(el.textContent.length<20) el.textContent=cfg.name; });
+  showMsg(document.getElementById('settings-msg'),'✅ Settings saved!','ok');
+  logActivity('settings','Site settings updated');
+  toast('Settings saved!');
+});
+
+document.getElementById('btn-reset-settings').addEventListener('click',()=>{
+  localStorage.removeItem('tk_site_cfg');
+  document.getElementById('cfg-name').value='';
+  document.getElementById('cfg-welcome').value='';
+  document.getElementById('cfg-logo').value='';
+  document.getElementById('cfg-accent').value='#00ffaa';
+  document.documentElement.style.setProperty('--accent','#00ffaa');
+  showMsg(document.getElementById('settings-msg'),'↺ Settings reset','ok');
+  toast('Settings reset');
+});
+
+// ══════════ TIME SLOTS ══════════
+(function loadSlotsEditor(){
+  const saved=localStorage.getItem('tk_time_slots');
+  const slots=saved?JSON.parse(saved):['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM'];
+  document.getElementById('slots-editor').value=slots.join('\n');
+})();
+
+document.getElementById('btn-save-slots').addEventListener('click',()=>{
+  const raw=document.getElementById('slots-editor').value.trim();
+  const slots=raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(!slots.length){showMsg(document.getElementById('slots-msg'),'Add at least one slot.','err');return;}
+  localStorage.setItem('tk_time_slots',JSON.stringify(slots));
+  // Update live TIME_SLOTS array
+  TIME_SLOTS.length=0; slots.forEach(s=>TIME_SLOTS.push(s));
+  showMsg(document.getElementById('slots-msg'),`✅ ${slots.length} slots saved!`,'ok');
+  toast('Time slots updated!');
+});
+
+document.getElementById('btn-reset-slots').addEventListener('click',()=>{
+  localStorage.removeItem('tk_time_slots');
+  const def=['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM'];
+  document.getElementById('slots-editor').value=def.join('\n');
+  TIME_SLOTS.length=0; def.forEach(s=>TIME_SLOTS.push(s));
+  showMsg(document.getElementById('slots-msg'),'↺ Reset to defaults','ok');
+  toast('Slots reset');
+});
+
+// ══════════ ANNOUNCEMENTS ══════════
+document.getElementById('btn-announce-send').addEventListener('click',async()=>{
+  const text=document.getElementById('announce-text').value.trim();
+  const msgEl=document.getElementById('announce-msg');
+  if(!text){showMsg(msgEl,'Write a message first.','err');return;}
+  const btn=document.getElementById('btn-announce-send');
+  btn.disabled=true;btn.textContent='Sending…';
+  const {error}=await sb.from('announcements').insert({message:text,active:true,created_by:currentUser.email});
+  btn.disabled=false;btn.textContent='📢 Broadcast to All';
+  if(error){showMsg(msgEl,error.message,'err');return;}
+  document.getElementById('announce-text').value='';
+  showMsg(msgEl,'✅ Announcement sent!','ok');
+  logActivity('announce',`Announcement: "${text.slice(0,50)}"`);
+  toast('📢 Announced!');
+  loadAnnouncements();
+  checkAnnouncements();
+});
+
+document.getElementById('btn-announce-clear').addEventListener('click',async()=>{
+  await sb.from('announcements').update({active:false}).eq('active',true);
+  toast('Announcements cleared'); loadAnnouncements(); checkAnnouncements();
+});
+
+async function loadAnnouncements(){
+  const el=document.getElementById('announce-list');
+  if(!el) return;
+  const {data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
+  if(!data||!data.length){el.innerHTML='<div class="empty-state">None active</div>';return;}
+  el.innerHTML=data.map(a=>`
+    <div class="manage-item" style="border-color:rgba(245,158,11,.2)">
+      <span style="font-size:1.2rem">📢</span>
+      <div class="mi-info"><div class="mi-name">${esc(a.message)}</div><div class="mi-desc">${new Date(a.created_at).toLocaleString()}</div></div>
+      <button class="btn-mi del" data-aid="${a.id}">🗑</button>
+    </div>`).join('');
+  el.querySelectorAll('[data-aid]').forEach(b=>b.addEventListener('click',async()=>{
+    await sb.from('announcements').update({active:false}).eq('id',b.dataset.aid);
+    loadAnnouncements(); checkAnnouncements(); toast('Removed');
+  }));
+}
+
+async function checkAnnouncements(){
+  const {data}=await sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false});
+  const banner=document.getElementById('announce-banner');
+  if(!data||!data.length){ if(banner) banner.style.display='none'; return; }
+  if(!banner){
+    const b=document.createElement('div');
+    b.id='announce-banner';
+    b.style.cssText='background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border-bottom:1px solid rgba(245,158,11,.25);padding:10px 24px;display:flex;align-items:center;gap:10px;font-size:.82rem;position:sticky;top:56px;z-index:90';
+    b.innerHTML=`<span style="font-size:1.1rem">📢</span><span id="announce-banner-text" style="flex:1;color:var(--text)"></span><button id="announce-banner-close" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem">✕</button>`;
+    document.getElementById('page-app').querySelector('.content').before(b);
+    document.getElementById('announce-banner-close').addEventListener('click',()=>b.style.display='none');
+  }
+  document.getElementById('announce-banner').style.display='flex';
+  document.getElementById('announce-banner-text').textContent=data[0].message;
+}
 
 // ══════════ ACTIVITY LOG ══════════
 function logActivity(type,text){
@@ -1493,12 +1950,31 @@ function renderActivityLog(){
   const list=document.getElementById('activity-list');
   const logs=JSON.parse(localStorage.getItem('tk_activity_log')||'[]');
   if(!logs.length){list.innerHTML='<div class="empty-state">No activity yet</div>';return;}
-  const icons={login:'🔑',signup:'✨',approve:'✅',reject:'🚫',upload:'📦',remove:'🗑',login_out:'👋'};
-  list.innerHTML=logs.slice(0,30).map(l=>`
+  const icons={login:'🔑',signup:'✨',approve:'✅',reject:'🚫',upload:'📦',remove:'🗑',login_out:'👋',booking:'🗓','admin-create':'➕'};
+
+  // Collapse consecutive identical entries
+  const grouped=[];
+  for(const l of logs.slice(0,100)){
+    const prev=grouped[grouped.length-1];
+    if(prev&&prev.text===l.text&&prev.type===l.type){
+      prev.count++;
+    } else {
+      grouped.push({...l,count:1});
+    }
+    if(grouped.length>=30) break;
+  }
+
+  list.innerHTML=grouped.map(l=>`
     <div class="activity-item">
       <div class="act-icon">${icons[l.type]||'📋'}</div>
-      <div class="act-info"><div class="act-text">${esc(l.text)}</div></div>
-      <div class="act-time">${new Date(l.time).toLocaleString()}</div>
+      <div class="act-info">
+        <div class="act-text">${esc(l.text)}</div>
+        ${l.count>1?`<div style="font-size:.68rem;color:var(--muted);margin-top:2px">repeated ${l.count}×</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        ${l.count>1?`<span style="background:var(--card);border:1px solid var(--border2);border-radius:999px;font-size:.68rem;font-weight:700;padding:2px 8px;color:var(--sub)">×${l.count}</span>`:''}
+        <div class="act-time">${new Date(l.time).toLocaleString()}</div>
+      </div>
     </div>`).join('');
 }
 
@@ -1761,7 +2237,7 @@ function renderHistory(){const list=document.getElementById('hist-list');if(!qrH
 document.getElementById('btn-clr-hist').addEventListener('click',()=>{qrHist=[];localStorage.removeItem('qr_hist');renderHistory();toast('Cleared');});
 
 // ══════════ BOOKING SYSTEM ══════════
-const TIME_SLOTS = ['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM'];
+const TIME_SLOTS = (()=>{ const s=localStorage.getItem('tk_time_slots'); return s?JSON.parse(s):['9:00 AM','10:00 AM','11:00 AM','12:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM']; })();
 let bookingDate = new Date(); bookingDate.setHours(0,0,0,0);
 let selectedSlot = null;
 let takenSlots = [];
@@ -1903,6 +2379,13 @@ async function loadAdminBookings(filter){
     });
   });
 }
+
+document.getElementById('btn-clear-activity').addEventListener('click',()=>{
+  if(!confirm('Clear all activity logs?')) return;
+  localStorage.removeItem('tk_activity_log');
+  renderActivityLog();
+  toast('Log cleared');
+});
 
 // ══════════ HELPERS ══════════
 function showMsg(el,text,type){el.textContent=text;el.className=`auth-msg ${type}`;}
