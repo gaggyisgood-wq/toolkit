@@ -1335,11 +1335,22 @@ function bootApp(user){
   if(isAdmin) av.classList.add('admin-av');
   document.getElementById('user-email-disp').textContent = email;
 
-  // Admin nav tab
+  // Inject nav buttons if not already there
   const nav = document.getElementById('app-nav');
+
+  // SiuSiu booking nav button
+  if(!document.getElementById('nav-booking')){
+    const bb=document.createElement('button');
+    bb.className='nav-btn'; bb.id='nav-booking'; bb.dataset.tab='booking';
+    bb.innerHTML='🗓 SiuSiu'; bb.style.display='none';
+    nav.appendChild(bb);
+  }
+
+  // Admin nav button
   if(isAdmin && !document.getElementById('nav-admin')){
     const ab=document.createElement('button');
-    ab.className='nav-btn admin-btn';ab.id='nav-admin';ab.dataset.tab='admin';ab.innerHTML='⚡ Admin';
+    ab.className='nav-btn admin-btn'; ab.id='nav-admin'; ab.dataset.tab='admin';
+    ab.innerHTML='⚡ Admin';
     nav.appendChild(ab);
   }
 
@@ -1354,18 +1365,17 @@ function bootApp(user){
   document.getElementById('user-chip-btn').addEventListener('click',()=>switchTab('profile'));
   document.getElementById('logo-home').addEventListener('click',()=>switchTab('tools'));
 
-  // Check booking access
-  if(!isAdmin){
+  // Show booking nav — admin always, users only if access granted
+  if(isAdmin){
+    const bb=document.getElementById('nav-booking');
+    if(bb) bb.style.display='';
+  } else {
     sb.from('profiles').select('booking_access').eq('id',user.id).single().then(({data})=>{
       if(data?.booking_access){
         const bb=document.getElementById('nav-booking');
         if(bb) bb.style.display='';
       }
     });
-  } else {
-    // Admin always sees booking
-    const bb=document.getElementById('nav-booking');
-    if(bb) bb.style.display='';
   }
 
   // Mobile menu
