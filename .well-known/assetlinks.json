@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.gaggyisgood_wq.twa",
+    "sha256_cert_fingerprints": ["95:00:8F:04:AB:4A:09:FE:10:25:0B:BF:38:47:A0:78:4C:7C:F6:91:DB:8B:68:84:A2:F1:43:14:5E:19:F8:3D"]
+  }
+}]
