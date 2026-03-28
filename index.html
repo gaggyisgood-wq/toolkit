@@ -805,6 +805,15 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
       </div>
     </div>
 
+    <!-- GENERATORS TAB -->
+    <div class="tab-panel" id="tab-gen">
+      <div class="page-heading">
+        <h1>⚡ <em>Generators</em></h1>
+        <p>Useful data generators for testing and development</p>
+      </div>
+      <div class="grid" id="gen-grid"></div>
+    </div>
+
   </div>
   </div>
 </div>
@@ -1079,8 +1088,9 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;hei
 </div>
 <audio id="beep"><source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const { createClient } = window.supabase;
 
 const ADMIN_EMAIL = 'lichengantv@gmail.com';
 const sb = createClient(
@@ -1103,6 +1113,7 @@ const BUILTIN = [
   {id:'base64',   icon:'🔤',name:'Base64 Encoder',    desc:'Encode or decode text and files to/from Base64.',                            badge:'Dev',      page:'tool'},
   {id:'wordcount',icon:'🔢',name:'Word Counter',      desc:'Count words, characters, sentences and estimate reading time.',               badge:'Writing',  page:'tool'},
   {id:'uuid',     icon:'🆔',name:'UUID Generator',    desc:'Generate random UUIDs (v4) and copy them instantly.',                        badge:'Dev',      page:'tool'},
+  {id:'hash',     icon:'#️⃣', name:'Hash Generator',    desc:'Generate MD5, SHA-1, SHA-256 and SHA-512 hashes from any text.',             badge:'Dev',      page:'tool'},
 ];
 const allTools = ()=>[...BUILTIN,...dynTools];
 const saveDyn  = ()=>localStorage.setItem('tk_tools',JSON.stringify(dynTools));
@@ -1182,9 +1193,27 @@ document.getElementById('btn-login').addEventListener('click', async()=>{
   if(!email||!pass){showMsg(authMsg,'Fill in both fields.','err');return;}
   const btn = document.getElementById('btn-login');
   btn.disabled=true; btn.textContent='Signing in…'; authMsg.className='auth-msg';
-  const {error} = await sb.auth.signInWithPassword({email,password:pass});
-  btn.disabled=false; btn.textContent='Sign in';
-  if(error) showMsg(authMsg,error.message,'err');
+
+  // Timeout guard for slow mobile connections
+  let timedOut = false;
+  const timeout = setTimeout(()=>{
+    timedOut = true;
+    btn.disabled=false; btn.textContent='Sign in';
+    showMsg(authMsg,'Connection timed out. Check your internet and try again.','err');
+  }, 15000);
+
+  try {
+    const {error} = await sb.auth.signInWithPassword({email,password:pass});
+    if(timedOut) return;
+    clearTimeout(timeout);
+    btn.disabled=false; btn.textContent='Sign in';
+    if(error) showMsg(authMsg,error.message,'err');
+  } catch(e) {
+    if(timedOut) return;
+    clearTimeout(timeout);
+    btn.disabled=false; btn.textContent='Sign in';
+    showMsg(authMsg,'Network error. Please try again.','err');
+  }
 });
 
 // Signup
@@ -1200,23 +1229,25 @@ document.getElementById('btn-signup').addEventListener('click', async()=>{
   const {data,error} = await sb.auth.signUp({email,password:pass, options:{ emailRedirectTo:'https://gaggyisgood-wq.github.io/toolkit/' }});
   btn.disabled=false; btn.textContent='Create account';
   if(error){showMsg(authMsg,error.message,'err');return;}
-  // data.user exists when email confirm is OFF, data.session when confirm is ON
   const newUser = data?.user || data?.session?.user;
+  const adminSignup = email===ADMIN_EMAIL;
   if(newUser){
-    const {error: profileErr} = await sb.from('profiles').upsert({
+    await sb.from('profiles').upsert({
       id: newUser.id,
       email,
-      status: 'pending',
+      status: adminSignup ? 'approved' : 'pending',
       display_name: '',
-      booking_access: false,
+      booking_access: adminSignup,
       created_at: new Date().toISOString()
     });
-    if(profileErr) console.error('Profile create error:', profileErr);
     logActivity('signup',`New signup: ${email}`);
-    showMsg(authMsg,'✅ Account created! Awaiting admin approval.','ok');
+    if(adminSignup){
+      showMsg(authMsg,'✅ Admin account ready! Signing you in…','ok');
+    } else {
+      showMsg(authMsg,'✅ Account created! Awaiting admin approval.','ok');
+    }
   } else {
-    // Email confirmation flow — profile created on first login instead
-    showMsg(authMsg,'✅ Check your email to confirm your account, then await admin approval.','ok');
+    showMsg(authMsg,'✅ Check your email to confirm, then await admin approval.','ok');
   }
 });
 
@@ -1399,6 +1430,12 @@ function bootApp(user){
     <button class="nav-btn" data-tab="profile" id="nav-profile">👤 Profile</button>
   `;
 
+  // Generators button — visible to all
+  const gb = document.createElement('button');
+  gb.className='nav-btn'; gb.id='nav-gen'; gb.dataset.tab='gen';
+  gb.innerHTML='⚡ Generators';
+  nav.appendChild(gb);
+
   // Booking button — hidden until access confirmed
   const bb = document.createElement('button');
   bb.className='nav-btn'; bb.id='nav-booking'; bb.dataset.tab='booking';
@@ -1462,6 +1499,7 @@ function switchTab(name){
   if(name==='admin')   loadAdminData();
   if(name==='booking') initBookingTab();
   if(name==='profile') loadProfile(currentUser);
+  if(name==='gen')     renderGenGrid();
 }
 
 // ══════════ PROFILE ══════════
@@ -2800,6 +2838,503 @@ function copyAllUUIDs(){ const items=[...document.querySelectorAll('#uuid-list .
 
 // Shared helpers
 function copyEl(id,isTextarea=false){ const el=document.getElementById(id); if(!el) return; const txt=isTextarea?el.value:el.textContent; navigator.clipboard.writeText(txt).then(()=>toast('Copied!')); }
+
+// ══════════ NETWORK STATUS ══════════
+function updateOnlineStatus(){
+  const banner = document.getElementById('offline-banner');
+  if(banner) banner.style.display = navigator.onLine ? 'none' : 'block';
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+// ══════════ GENERATORS ══════════
+const GENERATORS = [
+  {id:'cc',    icon:'💳', name:'Credit Card',     desc:'Generate valid test credit card numbers (Visa, Mastercard, Amex, Discover)'},
+  {id:'uuid',  icon:'🆔', name:'UUID v4',          desc:'Generate random UUID v4 strings'},
+  {id:'pass',  icon:'🔑', name:'Password',         desc:'Generate strong random passwords'},
+  {id:'name',  icon:'👤', name:'Random Name',      desc:'Generate random names, emails and phone numbers'},
+  {id:'addr',  icon:'🏠', name:'Address',          desc:'Generate fake but realistic addresses'},
+  {id:'color', icon:'🎨', name:'Color Palette',    desc:'Generate random color palettes in HEX, RGB and HSL'},
+  {id:'hash',  icon:'#️⃣',  name:'Text Hash',        desc:'Generate SHA-256 and other hashes from text'},
+  {id:'lorem', icon:'📄', name:'Lorem Ipsum',      desc:'Generate placeholder text of any length'},
+  {id:'num',   icon:'🔢', name:'Random Numbers',   desc:'Generate random numbers, ranges and sequences'},
+  {id:'date',  icon:'📅', name:'Random Date',      desc:'Generate random dates within a range'},
+];
+
+function renderGenGrid(){
+  const grid = document.getElementById('gen-grid');
+  if(!grid) return;
+  grid.innerHTML = GENERATORS.map((g,i)=>`
+    <div class="tool-card" data-genid="${g.id}" style="animation-delay:${i*.04+.04}s;cursor:pointer">
+      <div class="tool-icon-wrap">${g.icon}</div>
+      <div class="tool-name">${g.name}</div>
+      <div class="tool-desc">${g.desc}</div>
+      <span class="tool-badge">Generator</span>
+    </div>`).join('');
+  grid.querySelectorAll('[data-genid]').forEach(c=>
+    c.addEventListener('click',()=>openGenerator(c.dataset.genid))
+  );
+}
+
+function openGenerator(id){
+  const gen = GENERATORS.find(g=>g.id===id);
+  if(!gen) return;
+  document.getElementById('tool-modal-icon').textContent  = gen.icon;
+  document.getElementById('tool-modal-title').textContent = gen.name+' Generator';
+  document.getElementById('tool-modal-body').innerHTML    = getGenHTML(id);
+  document.getElementById('tool-modal').style.display     = 'block';
+  document.body.style.overflow = 'hidden';
+  initGen(id);
+}
+
+function getGenHTML(id){
+  switch(id){
+    case 'cc': return `
+      <div class="tool-section">
+        <div class="tool-row">
+          <select class="t-select" id="cc-type" style="flex:1">
+            <option value="visa">Visa</option>
+            <option value="mc">Mastercard</option>
+            <option value="amex">American Express</option>
+            <option value="discover">Discover</option>
+          </select>
+          <button class="t-btn primary" onclick="genCC()">🎲 Generate</button>
+          <button class="t-btn" onclick="genCCBatch()">×10 Batch</button>
+        </div>
+        <div style="margin-top:14px">
+          <div class="tool-label">Card Number</div>
+          <div class="tool-output" id="cc-num" style="font-size:1.1rem;letter-spacing:.1em;cursor:pointer" onclick="copyEl('cc-num')" title="Click to copy">—</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px">
+          <div><div class="tool-label">Expiry</div><div class="tool-output" id="cc-exp">—</div></div>
+          <div><div class="tool-label">CVV</div><div class="tool-output" id="cc-cvv">—</div></div>
+          <div><div class="tool-label">Brand</div><div class="tool-output" id="cc-brand">—</div></div>
+        </div>
+        <div class="tool-row" style="margin-top:12px">
+          <button class="t-btn" onclick="copyCC()">📋 Copy All</button>
+        </div>
+        <div id="cc-batch" style="margin-top:14px;display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto"></div>
+        <div style="margin-top:14px;padding:10px;background:rgba(255,85,102,.08);border:1px solid rgba(255,85,102,.2);border-radius:10px;font-size:.72rem;color:var(--sub)">
+          ⚠️ For testing purposes only. These are algorithmically valid but not real cards.
+        </div>
+      </div>`;
+
+    case 'uuid': return `
+      <div class="tool-section">
+        <div class="tool-row">
+          <select class="t-select" id="uuid-ver">
+            <option value="v4">UUID v4 (random)</option>
+            <option value="v1">UUID v1 (timestamp-based)</option>
+          </select>
+          <button class="t-btn primary" onclick="genUUIDs2()">🆔 Generate 5</button>
+        </div>
+        <div id="uuid-list2" style="display:flex;flex-direction:column;gap:8px;margin-top:14px"></div>
+        <div class="tool-row" style="margin-top:12px">
+          <button class="t-btn" onclick="copyAllUUIDs2()">📋 Copy All</button>
+          <button class="t-btn" onclick="document.getElementById('uuid-list2').innerHTML=''">🗑 Clear</button>
+        </div>
+      </div>`;
+
+    case 'pass': return `
+      <div class="tool-section">
+        <div class="tool-row">
+          <label style="font-size:.8rem;color:var(--sub)">Length</label>
+          <input type="range" id="gp-len" min="8" max="128" value="20" style="-webkit-appearance:none;height:4px;border-radius:4px;background:var(--border);outline:none;flex:1;cursor:pointer" oninput="document.getElementById('gp-len-val').textContent=this.value">
+          <span id="gp-len-val" style="font-size:.8rem;color:var(--muted);width:32px">20</span>
+        </div>
+        <div class="tool-row" style="gap:16px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--sub);cursor:pointer"><input type="checkbox" id="gp-u" checked> A-Z</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--sub);cursor:pointer"><input type="checkbox" id="gp-l" checked> a-z</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--sub);cursor:pointer"><input type="checkbox" id="gp-n" checked> 0-9</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--sub);cursor:pointer"><input type="checkbox" id="gp-s" checked> !@#$</label>
+        </div>
+        <div style="margin-top:14px">
+          <div class="tool-label">Quantity</div>
+          <input type="number" id="gp-qty" class="t-input" value="5" min="1" max="50" style="width:80px">
+        </div>
+        <div class="tool-row" style="margin-top:12px">
+          <button class="t-btn primary" onclick="genPassBatch()">🔑 Generate</button>
+          <button class="t-btn" onclick="copyAllPasses()">📋 Copy All</button>
+        </div>
+        <div id="gp-list" style="display:flex;flex-direction:column;gap:6px;margin-top:14px;max-height:220px;overflow-y:auto"></div>
+      </div>`;
+
+    case 'name': return `
+      <div class="tool-section">
+        <div class="tool-row">
+          <select class="t-select" id="name-locale">
+            <option value="en">English</option>
+            <option value="zh">Chinese</option>
+            <option value="jp">Japanese</option>
+          </select>
+          <input type="number" class="t-input" id="name-qty" value="5" min="1" max="50" style="width:70px">
+          <button class="t-btn primary" onclick="genNames()">👤 Generate</button>
+        </div>
+        <div id="name-list" style="display:flex;flex-direction:column;gap:8px;margin-top:14px;max-height:300px;overflow-y:auto"></div>
+        <div class="tool-row" style="margin-top:10px">
+          <button class="t-btn" onclick="copyGenList('name-list')">📋 Copy All</button>
+        </div>
+      </div>`;
+
+    case 'addr': return `
+      <div class="tool-section">
+        <div class="tool-row">
+          <select class="t-select" id="addr-country">
+            <option value="sg">Singapore 🇸🇬</option>
+            <option value="us">United States 🇺🇸</option>
+            <option value="uk">United Kingdom 🇬🇧</option>
+            <option value="au">Australia 🇦🇺</option>
+          </select>
+          <input type="number" class="t-input" id="addr-qty" value="3" min="1" max="20" style="width:70px">
+          <button class="t-btn primary" onclick="genAddresses()">🏠 Generate</button>
+        </div>
+        <div id="addr-list" style="display:flex;flex-direction:column;gap:10px;margin-top:14px;max-height:300px;overflow-y:auto"></div>
+        <div class="tool-row" style="margin-top:10px">
+          <button class="t-btn" onclick="copyGenList('addr-list')">📋 Copy All</button>
+        </div>
+      </div>`;
+
+    case 'color': return `
+      <div class="tool-section">
+        <div class="tool-row">
+          <select class="t-select" id="pal-scheme">
+            <option value="random">Random</option>
+            <option value="mono">Monochromatic</option>
+            <option value="comp">Complementary</option>
+            <option value="tri">Triadic</option>
+            <option value="pastel">Pastel</option>
+            <option value="dark">Dark</option>
+          </select>
+          <input type="number" class="t-input" id="pal-count" value="5" min="2" max="20" style="width:70px">
+          <button class="t-btn primary" onclick="genPalette()">🎨 Generate</button>
+        </div>
+        <div id="pal-list" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"></div>
+        <div id="pal-codes" style="display:flex;flex-direction:column;gap:6px;margin-top:12px;max-height:200px;overflow-y:auto"></div>
+        <div class="tool-row" style="margin-top:10px">
+          <button class="t-btn" onclick="copyGenList('pal-codes')">📋 Copy HEX codes</button>
+        </div>
+      </div>`;
+
+    case 'hash': return `
+      <div class="tool-section">
+        <div class="tool-label">Input text</div>
+        <textarea class="tool-area" id="hash-in" rows="4" placeholder="Enter text to hash…" style="width:100%;margin-bottom:12px" oninput="genHashes()"></textarea>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div><div class="tool-label">SHA-256</div><div class="tool-output" id="hash-256" style="cursor:pointer;font-size:.75rem;word-break:break-all" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!'))">—</div></div>
+          <div><div class="tool-label">SHA-1</div><div class="tool-output" id="hash-1" style="cursor:pointer;font-size:.75rem;word-break:break-all" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!'))">—</div></div>
+          <div><div class="tool-label">SHA-512</div><div class="tool-output" id="hash-512" style="cursor:pointer;font-size:.75rem;word-break:break-all" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!'))">—</div></div>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:10px">Click any hash to copy</div>
+      </div>`;
+
+    case 'lorem': return `
+      <div class="tool-section">
+        <div class="tool-row">
+          <select class="t-select" id="lorem-type">
+            <option value="words">Words</option>
+            <option value="sentences">Sentences</option>
+            <option value="paragraphs">Paragraphs</option>
+          </select>
+          <input type="number" class="t-input" id="lorem-qty" value="50" min="1" max="500" style="width:80px">
+          <button class="t-btn primary" onclick="genLorem()">📄 Generate</button>
+        </div>
+        <textarea class="tool-area" id="lorem-out" rows="8" readonly style="width:100%;margin-top:12px;cursor:pointer" onclick="copyEl('lorem-out',true)" title="Click to copy"></textarea>
+        <div class="tool-row" style="margin-top:10px">
+          <button class="t-btn" onclick="copyEl('lorem-out',true)">📋 Copy</button>
+        </div>
+      </div>`;
+
+    case 'num': return `
+      <div class="tool-section">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+          <div><div class="tool-label">Min</div><input type="number" class="t-input" id="rn-min" value="1" style="width:100%"></div>
+          <div><div class="tool-label">Max</div><input type="number" class="t-input" id="rn-max" value="100" style="width:100%"></div>
+          <div><div class="tool-label">Count</div><input type="number" class="t-input" id="rn-count" value="10" min="1" max="100" style="width:100%"></div>
+        </div>
+        <div class="tool-row">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--sub);cursor:pointer"><input type="checkbox" id="rn-unique"> No duplicates</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--sub);cursor:pointer"><input type="checkbox" id="rn-sort"> Sort</label>
+          <button class="t-btn primary" onclick="genNumbers()">🔢 Generate</button>
+        </div>
+        <div class="tool-output" id="rn-out" style="margin-top:12px;min-height:60px;cursor:pointer;word-break:break-all" onclick="copyEl('rn-out')">—</div>
+        <div class="tool-row" style="margin-top:10px">
+          <button class="t-btn" onclick="copyEl('rn-out')">📋 Copy</button>
+        </div>
+      </div>`;
+
+    case 'date': return `
+      <div class="tool-section">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <div><div class="tool-label">From</div><input type="date" class="t-input" id="rd-from" style="width:100%;color-scheme:dark"></div>
+          <div><div class="tool-label">To</div><input type="date" class="t-input" id="rd-to" style="width:100%;color-scheme:dark"></div>
+        </div>
+        <div class="tool-row">
+          <select class="t-select" id="rd-fmt">
+            <option value="iso">ISO (2025-01-31)</option>
+            <option value="sg">SG (31/01/2025)</option>
+            <option value="us">US (01/31/2025)</option>
+            <option value="long">Long (31 Jan 2025)</option>
+          </select>
+          <input type="number" class="t-input" id="rd-count" value="5" min="1" max="50" style="width:70px">
+          <button class="t-btn primary" onclick="genDates()">📅 Generate</button>
+        </div>
+        <div id="rd-list" style="display:flex;flex-direction:column;gap:6px;margin-top:14px;max-height:200px;overflow-y:auto"></div>
+        <div class="tool-row" style="margin-top:10px">
+          <button class="t-btn" onclick="copyGenList('rd-list')">📋 Copy All</button>
+        </div>
+      </div>`;
+
+    default: return '<div class="empty-state">Generator not found</div>';
+  }
+}
+
+function initGen(id){
+  if(id==='cc')    { genCC(); }
+  if(id==='uuid')  { genUUIDs2(); }
+  if(id==='pass')  { genPassBatch(); }
+  if(id==='name')  { genNames(); }
+  if(id==='addr')  { genAddresses(); }
+  if(id==='color') { genPalette(); }
+  if(id==='hash')  { /* waits for input */ }
+  if(id==='lorem') { genLorem(); }
+  if(id==='num')   { const today=new Date(); document.getElementById('rd-from') && (document.getElementById('rd-from').value=new Date(today.getFullYear()-1,0,1).toISOString().split('T')[0]); document.getElementById('rd-to') && (document.getElementById('rd-to').value=today.toISOString().split('T')[0]); genNumbers(); }
+  if(id==='date')  { const today=new Date(); if(document.getElementById('rd-from')) document.getElementById('rd-from').value=new Date(today.getFullYear()-1,0,1).toISOString().split('T')[0]; if(document.getElementById('rd-to')) document.getElementById('rd-to').value=today.toISOString().split('T')[0]; genDates(); }
+}
+
+// ── Credit Card Generator (Luhn algorithm) ──
+function luhn(n){ let s=0,alt=false; for(let i=n.length-1;i>=0;i--){ let d=parseInt(n[i]); if(alt){d*=2;if(d>9)d-=9;} s+=d;alt=!alt; } return s%10===0; }
+function genLuhn(prefix,len){ let num=prefix; while(num.length<len-1) num+=Math.floor(Math.random()*10); let s=0,alt=false; for(let i=num.length-1;i>=0;i--){ let d=parseInt(num[i]); if(alt){d*=2;if(d>9)d-=9;} s+=d;alt=!alt; } num+=(10-(s%10))%10; return num; }
+function fmtCard(n,type){ if(type==='amex') return n.replace(/(\d{4})(\d{6})(\d{5})/,'$1 $2 $3'); return n.replace(/(\d{4})/g,'$1 ').trim(); }
+function genCC(){
+  const type=document.getElementById('cc-type')?.value||'visa';
+  const configs={visa:{prefix:'4',len:16,cvv:3},mc:{prefix:['51','52','53','54','55'][Math.floor(Math.random()*5)],len:16,cvv:3},amex:{prefix:['34','37'][Math.floor(Math.random()*2)],len:15,cvv:4},discover:{prefix:'6011',len:16,cvv:3}};
+  const c=configs[type];
+  const num=genLuhn(c.prefix,c.len);
+  const m=String(Math.floor(Math.random()*12)+1).padStart(2,'0');
+  const y=new Date().getFullYear()+Math.floor(Math.random()*5)+1;
+  const cvv=Array.from({length:c.cvv},()=>Math.floor(Math.random()*10)).join('');
+  const names={visa:'Visa',mc:'Mastercard',amex:'American Express',discover:'Discover'};
+  document.getElementById('cc-num').textContent=fmtCard(num,type);
+  document.getElementById('cc-exp').textContent=`${m}/${String(y).slice(-2)}`;
+  document.getElementById('cc-cvv').textContent=cvv;
+  document.getElementById('cc-brand').textContent=names[type];
+  document.getElementById('cc-batch').innerHTML='';
+}
+function genCCBatch(){
+  const type=document.getElementById('cc-type')?.value||'visa';
+  const batch=document.getElementById('cc-batch'); if(!batch) return;
+  batch.innerHTML='';
+  for(let i=0;i<10;i++){
+    const configs={visa:{prefix:'4',len:16,cvv:3},mc:{prefix:['51','52','53','54','55'][Math.floor(Math.random()*5)],len:16,cvv:3},amex:{prefix:['34','37'][Math.floor(Math.random()*2)],len:15,cvv:4},discover:{prefix:'6011',len:16,cvv:3}};
+    const c=configs[type]; const num=genLuhn(c.prefix,c.len);
+    const m=String(Math.floor(Math.random()*12)+1).padStart(2,'0');
+    const y=new Date().getFullYear()+Math.floor(Math.random()*5)+1;
+    const cvv=Array.from({length:c.cvv},()=>Math.floor(Math.random()*10)).join('');
+    const d=document.createElement('div');
+    d.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.75rem;font-family:var(--fm);display:flex;gap:10px;align-items:center;cursor:pointer';
+    const txt=`${fmtCard(num,type)} | ${m}/${String(y).slice(-2)} | ${cvv}`;
+    d.innerHTML=`<span style="flex:1;color:var(--text)">${txt}</span><span style="color:var(--muted)">📋</span>`;
+    d.onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied!'));
+    batch.appendChild(d);
+  }
+}
+function copyCC(){ const n=document.getElementById('cc-num')?.textContent||''; const e=document.getElementById('cc-exp')?.textContent||''; const c=document.getElementById('cc-cvv')?.textContent||''; navigator.clipboard.writeText(`${n} | ${e} | CVV: ${c}`).then(()=>toast('Copied!')); }
+
+// ── UUID Generator ──
+function genUUIDs2(){
+  const list=document.getElementById('uuid-list2'); if(!list) return;
+  list.innerHTML='';
+  const count=5;
+  for(let i=0;i<count;i++){
+    const u=crypto.randomUUID();
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;gap:8px;align-items:center';
+    div.innerHTML=`<div class="tool-output" style="flex:1;cursor:pointer;font-size:.78rem" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!'))">${u}</div><button class="t-btn" style="flex:none" onclick="navigator.clipboard.writeText('${u}').then(()=>toast('Copied!'))">📋</button>`;
+    list.appendChild(div);
+  }
+}
+function copyAllUUIDs2(){ const items=[...document.querySelectorAll('#uuid-list2 .tool-output')].map(e=>e.textContent); navigator.clipboard.writeText(items.join('
+')).then(()=>toast('All copied!')); }
+
+// ── Password Batch ──
+function genPassBatch(){
+  const len=parseInt(document.getElementById('gp-len')?.value||20);
+  const u=document.getElementById('gp-u')?.checked;
+  const l=document.getElementById('gp-l')?.checked;
+  const n=document.getElementById('gp-n')?.checked;
+  const s=document.getElementById('gp-s')?.checked;
+  const qty=parseInt(document.getElementById('gp-qty')?.value||5);
+  let chars='';
+  if(u)chars+='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  if(l)chars+='abcdefghijklmnopqrstuvwxyz';
+  if(n)chars+='0123456789';
+  if(s)chars+='!@#$%^&*()_+-=[]{}|;:,.?';
+  if(!chars)chars='abcdefghijklmnopqrstuvwxyz';
+  const list=document.getElementById('gp-list'); if(!list) return;
+  list.innerHTML='';
+  for(let i=0;i<qty;i++){
+    let pw=''; for(let j=0;j<len;j++) pw+=chars[Math.floor(Math.random()*chars.length)];
+    const d=document.createElement('div');
+    d.style.cssText='display:flex;gap:8px;align-items:center';
+    d.innerHTML=`<div class="tool-output" style="flex:1;cursor:pointer;font-size:.78rem;letter-spacing:.02em" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!'))">${pw}</div><button class="t-btn" style="flex:none" onclick="navigator.clipboard.writeText('${pw}').then(()=>toast('Copied!'))">📋</button>`;
+    list.appendChild(d);
+  }
+}
+function copyAllPasses(){ const items=[...document.querySelectorAll('#gp-list .tool-output')].map(e=>e.textContent); navigator.clipboard.writeText(items.join('
+')).then(()=>toast('All copied!')); }
+
+// ── Name Generator ──
+const NAMES={
+  en:{first:['James','Emma','Liam','Olivia','Noah','Ava','William','Sophia','Benjamin','Isabella','Lucas','Mia','Mason','Charlotte','Ethan','Amelia','Alexander','Harper','Henry','Evelyn'],last:['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Wilson','Taylor','Anderson','Thomas','Jackson','White','Harris','Martin','Thompson','Young','Walker','Hall']},
+  zh:{first:['伟','芳','娜','敏','静','丽','强','磊','军','洋','勇','艳','杰','娟','涛','明','超','秀英','霞','平'],last:['王','李','张','刘','陈','杨','黄','赵','吴','周','徐','孙','马','朱','胡','郭','何','高','林','郑']},
+  jp:{first:['Hiroshi','Yuki','Kenji','Akiko','Takashi','Yoko','Satoshi','Miyuki','Taro','Hanako'],last:['Yamamoto','Tanaka','Suzuki','Watanabe','Ito','Nakamura','Kobayashi','Kato','Yoshida','Yamada']}
+};
+const DOMAINS=['gmail.com','yahoo.com','outlook.com','hotmail.com','icloud.com'];
+function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function genNames(){
+  const loc=document.getElementById('name-locale')?.value||'en';
+  const qty=parseInt(document.getElementById('name-qty')?.value||5);
+  const list=document.getElementById('name-list'); if(!list) return;
+  const n=NAMES[loc]||NAMES.en;
+  list.innerHTML='';
+  for(let i=0;i<qty;i++){
+    const fn=rand(n.first), ln=rand(n.last);
+    const email=`${fn.toLowerCase().replace(/\s/,'')}${ln.toLowerCase().replace(/\s/,'')}${Math.floor(Math.random()*99)}@${rand(DOMAINS)}`;
+    const phone=`+65 ${Math.floor(Math.random()*9000+1000)} ${Math.floor(Math.random()*9000+1000)}`;
+    const txt=`${fn} ${ln} | ${email} | ${phone}`;
+    const d=document.createElement('div');
+    d.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 13px;font-size:.78rem;cursor:pointer';
+    d.innerHTML=`<div style="font-weight:700;color:var(--text)">${fn} ${ln}</div><div style="color:var(--muted);margin-top:3px">${email}</div><div style="color:var(--muted)">${phone}</div>`;
+    d.onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied!'));
+    list.appendChild(d);
+  }
+}
+
+// ── Address Generator ──
+const ADDR_DATA={
+  sg:{streets:['Orchard Road','Buona Vista Drive','Tampines Avenue','Jurong West Street','Clementi Road','Ang Mo Kio Ave','Bedok North Road','Woodlands Drive','Yishun Ring Road','Punggol Place'],prefix:['Blk',''],postal:()=>String(Math.floor(Math.random()*900000)+100000)},
+  us:{streets:['Main St','Oak Ave','Maple Dr','Cedar Ln','Pine Rd','Elm St','Washington Blvd','Park Ave','Lake Dr','Hill Rd'],cities:['New York, NY','Los Angeles, CA','Chicago, IL','Houston, TX','Phoenix, AZ'],postal:()=>String(Math.floor(Math.random()*90000)+10000)},
+  uk:{streets:['High Street','Church Lane','Victoria Road','London Road','Station Road','The Green','Manor Way','Park Road','Queens Drive','King Street'],cities:['London','Manchester','Birmingham','Leeds','Glasgow'],postal:()=>`${rand('ABCDEFGHIJKLMNOPRSTUVWXY')}${Math.floor(Math.random()*9+1)} ${Math.floor(Math.random()*9+1)}${rand('ABCDEFGHIJKLMNOPRSTUVWXY')}${rand('ABCDEFGHIJKLMNOPRSTUVWXY')}`},
+  au:{streets:['Collins St','Elizabeth St','Queen St','King St','George St','Pitt St','Bourke St','Flinders St','Spring St','William St'],cities:['Sydney NSW','Melbourne VIC','Brisbane QLD','Perth WA','Adelaide SA'],postal:()=>String(Math.floor(Math.random()*9000)+1000)}
+};
+function genAddresses(){
+  const country=document.getElementById('addr-country')?.value||'sg';
+  const qty=parseInt(document.getElementById('addr-qty')?.value||3);
+  const list=document.getElementById('addr-list'); if(!list) return;
+  const d=ADDR_DATA[country]||ADDR_DATA.sg;
+  list.innerHTML='';
+  for(let i=0;i<qty;i++){
+    const num=Math.floor(Math.random()*999+1);
+    const st=rand(d.streets);
+    const postal=d.postal();
+    let addr='';
+    if(country==='sg') addr=`${d.prefix[Math.floor(Math.random()*2)]} ${num} ${st}, Singapore ${postal}`;
+    else if(country==='us'||country==='au') addr=`${num} ${st}, ${rand(d.cities)} ${postal}`;
+    else addr=`${num} ${st}, ${rand(d.cities)}, ${postal}`;
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 13px;font-size:.82rem;color:var(--text);cursor:pointer';
+    div.textContent=addr;
+    div.onclick=()=>navigator.clipboard.writeText(addr).then(()=>toast('Copied!'));
+    list.appendChild(div);
+  }
+}
+
+// ── Color Palette ──
+function hsl2hex(h,s,l){ s/=100;l/=100; const a=s*Math.min(l,1-l); const f=n=>{ const k=(n+h/30)%12; const c=l-a*Math.max(Math.min(k-3,9-k,1),-1); return Math.round(255*c).toString(16).padStart(2,'0'); }; return `#${f(0)}${f(8)}${f(4)}`; }
+function genPalette(){
+  const scheme=document.getElementById('pal-scheme')?.value||'random';
+  const count=parseInt(document.getElementById('pal-count')?.value||5);
+  const plist=document.getElementById('pal-list'); const pcodes=document.getElementById('pal-codes');
+  if(!plist||!pcodes) return;
+  const h0=Math.floor(Math.random()*360);
+  let colors=[];
+  if(scheme==='random') for(let i=0;i<count;i++) colors.push(hsl2hex(Math.floor(Math.random()*360),Math.floor(Math.random()*60+40),Math.floor(Math.random()*40+30)));
+  else if(scheme==='mono') for(let i=0;i<count;i++) colors.push(hsl2hex(h0,60,20+i*(60/count)));
+  else if(scheme==='comp') colors=[hsl2hex(h0,65,50),hsl2hex(h0,45,65),hsl2hex((h0+180)%360,65,50),hsl2hex((h0+180)%360,45,65),hsl2hex(h0,30,35)].slice(0,count);
+  else if(scheme==='tri') colors=[hsl2hex(h0,65,50),hsl2hex((h0+120)%360,65,50),hsl2hex((h0+240)%360,65,50),hsl2hex(h0,45,70),hsl2hex((h0+120)%360,45,70)].slice(0,count);
+  else if(scheme==='pastel') for(let i=0;i<count;i++) colors.push(hsl2hex(Math.floor(Math.random()*360),60,82));
+  else if(scheme==='dark') for(let i=0;i<count;i++) colors.push(hsl2hex(Math.floor(Math.random()*360),60,20));
+  plist.innerHTML=colors.map(c=>`<div onclick="navigator.clipboard.writeText('${c}').then(()=>toast('${c} copied!'))" title="${c}" style="flex:1;min-width:40px;height:60px;border-radius:10px;background:${c};cursor:pointer;border:2px solid rgba(255,255,255,.1);transition:transform .15s" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''"></div>`).join('');
+  pcodes.innerHTML=colors.map(c=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 12px;font-size:.78rem;font-family:var(--fm);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="navigator.clipboard.writeText('${c}').then(()=>toast('Copied!'))"><span style="width:18px;height:18px;border-radius:4px;background:${c};display:inline-block;flex-shrink:0;border:1px solid rgba(255,255,255,.15)"></span>${c}</div>`).join('');
+}
+
+// ── Hash Generator ──
+async function genHashes(){
+  const txt=document.getElementById('hash-in')?.value||'';
+  if(!txt){ ['hash-256','hash-1','hash-512'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='—'; }); return; }
+  const enc=new TextEncoder();
+  const data=enc.encode(txt);
+  const algs=[['SHA-256','hash-256'],['SHA-1','hash-1'],['SHA-512','hash-512']];
+  for(const [alg,id] of algs){
+    const buf=await crypto.subtle.digest(alg,data);
+    const hex=[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    const el=document.getElementById(id); if(el) el.textContent=hex;
+  }
+}
+
+// ── Lorem Ipsum ──
+const LOREM_WORDS='lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum'.split(' ');
+function genLorem(){
+  const type=document.getElementById('lorem-type')?.value||'words';
+  const qty=parseInt(document.getElementById('lorem-qty')?.value||50);
+  const out=document.getElementById('lorem-out'); if(!out) return;
+  if(type==='words'){
+    const words=[]; for(let i=0;i<qty;i++) words.push(LOREM_WORDS[Math.floor(Math.random()*LOREM_WORDS.length)]);
+    words[0]=words[0].charAt(0).toUpperCase()+words[0].slice(1);
+    out.value=words.join(' ')+'.';
+  } else if(type==='sentences'){
+    const sents=[]; for(let i=0;i<qty;i++){ const wc=Math.floor(Math.random()*15+8); const words=[]; for(let j=0;j<wc;j++) words.push(LOREM_WORDS[Math.floor(Math.random()*LOREM_WORDS.length)]); words[0]=words[0].charAt(0).toUpperCase()+words[0].slice(1); sents.push(words.join(' ')+'.'); } out.value=sents.join(' ');
+  } else {
+    const paras=[]; for(let i=0;i<qty;i++){ const sc=Math.floor(Math.random()*4+3); const sents=[]; for(let j=0;j<sc;j++){ const wc=Math.floor(Math.random()*15+8); const words=[]; for(let k=0;k<wc;k++) words.push(LOREM_WORDS[Math.floor(Math.random()*LOREM_WORDS.length)]); words[0]=words[0].charAt(0).toUpperCase()+words[0].slice(1); sents.push(words.join(' ')+'.'); } paras.push(sents.join(' ')); } out.value=paras.join('
+
+');
+  }
+}
+
+// ── Random Numbers ──
+function genNumbers(){
+  const min=parseInt(document.getElementById('rn-min')?.value||1);
+  const max=parseInt(document.getElementById('rn-max')?.value||100);
+  const count=parseInt(document.getElementById('rn-count')?.value||10);
+  const unique=document.getElementById('rn-unique')?.checked;
+  const sort=document.getElementById('rn-sort')?.checked;
+  const out=document.getElementById('rn-out'); if(!out) return;
+  const nums=[];
+  if(unique&&count>(max-min+1)){ out.textContent='Range too small for unique values'; return; }
+  const pool=unique?[...Array(max-min+1).keys()].map(i=>i+min):null;
+  for(let i=0;i<count;i++){
+    if(unique){ const idx=Math.floor(Math.random()*(pool.length-i)); nums.push(pool[idx]); [pool[idx],pool[pool.length-1-i]]=[pool[pool.length-1-i],pool[idx]]; }
+    else nums.push(Math.floor(Math.random()*(max-min+1))+min);
+  }
+  if(sort) nums.sort((a,b)=>a-b);
+  out.textContent=nums.join(', ');
+}
+
+// ── Random Dates ──
+function genDates(){
+  const from=new Date(document.getElementById('rd-from')?.value||'2024-01-01');
+  const to=new Date(document.getElementById('rd-to')?.value||new Date().toISOString().split('T')[0]);
+  const count=parseInt(document.getElementById('rd-count')?.value||5);
+  const fmt=document.getElementById('rd-fmt')?.value||'iso';
+  const list=document.getElementById('rd-list'); if(!list) return;
+  const range=to-from;
+  const dates=[];
+  for(let i=0;i<count;i++){
+    const d=new Date(from.getTime()+Math.random()*range);
+    let str='';
+    if(fmt==='iso') str=d.toISOString().split('T')[0];
+    else if(fmt==='sg') str=`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    else if(fmt==='us') str=`${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+    else str=d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    dates.push(str);
+  }
+  list.innerHTML=dates.map(d=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 13px;font-size:.82rem;font-family:var(--fm);color:var(--text);cursor:pointer" onclick="navigator.clipboard.writeText('${d}').then(()=>toast('Copied!'))">${d}</div>`).join('');
+}
+
+// Shared helper for generators
+function copyGenList(id){ const items=[...document.querySelectorAll(`#${id} div`)].map(e=>e.textContent.trim()).filter(Boolean); navigator.clipboard.writeText(items.join('
+')).then(()=>toast('All copied!')); }
 
 // ══════════ HELPERS ══════════
 function showMsg(el,text,type){el.textContent=text;el.className=`auth-msg ${type}`;}
