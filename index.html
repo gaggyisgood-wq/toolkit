@@ -2833,7 +2833,12 @@ function doBase64(){ const v=document.getElementById('b64-in')?.value||''; const
 function countWords(){ const v=document.getElementById('wc-text')?.value||''; const words=v.trim().split(/\s+/).filter(Boolean); const sents=v.split(/[.!?]+/).filter(s=>s.trim()).length; const el_w=document.getElementById('wc-words'); const el_c=document.getElementById('wc-chars'); const el_r=document.getElementById('wc-read'); const el_s=document.getElementById('wc-sents'); if(el_w)el_w.textContent=words.length; if(el_c)el_c.textContent=v.length; if(el_r)el_r.textContent=Math.max(1,Math.ceil(words.length/200)); if(el_s)el_s.textContent=`${sents} sentence${sents!==1?'s':''} · ${v.replace(/\s/g,'').length} chars (no spaces)`; }
 
 // UUID
-function genUUIDs(){ const list=document.getElementById('uuid-list'); if(!list) return; for(let i=0;i<5;i++){ const u=crypto.randomUUID(); const div=document.createElement('div'); div.style.cssText='display:flex;gap:8px;align-items:center'; div.innerHTML=`<div class="tool-output" style="flex:1;cursor:pointer;font-size:.8rem" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!'))">${u}</div><button class="t-btn" onclick="navigator.clipboard.writeText('${u}').then(()=>toast('Copied!'))">📋</button>`; list.appendChild(div); } }
+function genUUIDs(){ const list=document.getElementById('uuid-list'); if(!list) return; for(let i=0;i<5;i++){ const u=crypto.randomUUID(); const div=document.createElement('div'); div.style.cssText='display:flex;gap:8px;align-items:center'; const uoo=document.createElement('div');
+    uoo.className='tool-output';uoo.style.cssText='flex:1;cursor:pointer;font-size:.8rem';uoo.textContent=u;
+    uoo.addEventListener('click',()=>navigator.clipboard.writeText(u).then(()=>toast('Copied!')));
+    const ubb=document.createElement('button');ubb.className='t-btn';ubb.textContent='📋';
+    ubb.addEventListener('click',()=>navigator.clipboard.writeText(u).then(()=>toast('Copied!')));
+    div.appendChild(uoo);div.appendChild(ubb); list.appendChild(div); } }
 function copyAllUUIDs(){ const items=[...document.querySelectorAll('#uuid-list .tool-output')].map(el=>el.textContent); navigator.clipboard.writeText(items.join('\n')).then(()=>toast('All UUIDs copied!')); }
 
 // Shared helpers
@@ -3134,8 +3139,10 @@ function genCCBatch(){
     const d=document.createElement('div');
     d.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:.75rem;font-family:var(--fm);display:flex;gap:10px;align-items:center;cursor:pointer';
     const txt=`${fmtCard(num,type)} | ${m}/${String(y).slice(-2)} | ${cvv}`;
-    d.innerHTML=`<span style="flex:1;color:var(--text)">${txt}</span><span style="color:var(--muted)">📋</span>`;
-    d.onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied!'));
+    const sp=document.createElement('span');sp.style.flex='1';sp.style.color='var(--text)';sp.textContent=txt;
+    const ic=document.createElement('span');ic.style.color='var(--muted)';ic.textContent='📋';
+    d.appendChild(sp);d.appendChild(ic);
+    d.addEventListener('click',()=>navigator.clipboard.writeText(txt).then(()=>toast('Copied!')));
     batch.appendChild(d);
   }
 }
@@ -3150,12 +3157,19 @@ function genUUIDs2(){
     const u=crypto.randomUUID();
     const div=document.createElement('div');
     div.style.cssText='display:flex;gap:8px;align-items:center';
-    div.innerHTML=`<div class="tool-output" style="flex:1;cursor:pointer;font-size:.78rem" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!'))">${u}</div><button class="t-btn" style="flex:none" onclick="navigator.clipboard.writeText('${u}').then(()=>toast('Copied!'))">📋</button>`;
+    const uOut=document.createElement('div');
+    uOut.className='tool-output';
+    uOut.style.cssText='flex:1;cursor:pointer;font-size:.78rem';
+    uOut.textContent=u;
+    uOut.addEventListener('click',()=>navigator.clipboard.writeText(u).then(()=>toast('Copied!')));
+    const uBtn=document.createElement('button');
+    uBtn.className='t-btn'; uBtn.style.flex='none'; uBtn.textContent='📋';
+    uBtn.addEventListener('click',()=>navigator.clipboard.writeText(u).then(()=>toast('Copied!')));
+    div.appendChild(uOut); div.appendChild(uBtn);
     list.appendChild(div);
   }
 }
-function copyAllUUIDs2(){ const items=[...document.querySelectorAll('#uuid-list2 .tool-output')].map(e=>e.textContent); navigator.clipboard.writeText(items.join('
-')).then(()=>toast('All copied!')); }
+function copyAllUUIDs2(){ const items=[...document.querySelectorAll('#uuid-list2 .tool-output')].map(e=>e.textContent); navigator.clipboard.writeText(items.join('\n')).then(()=>toast('All copied!')); }
 
 // ── Password Batch ──
 function genPassBatch(){
@@ -3177,12 +3191,19 @@ function genPassBatch(){
     let pw=''; for(let j=0;j<len;j++) pw+=chars[Math.floor(Math.random()*chars.length)];
     const d=document.createElement('div');
     d.style.cssText='display:flex;gap:8px;align-items:center';
-    d.innerHTML=`<div class="tool-output" style="flex:1;cursor:pointer;font-size:.78rem;letter-spacing:.02em" onclick="navigator.clipboard.writeText(this.textContent).then(()=>toast('Copied!'))">${pw}</div><button class="t-btn" style="flex:none" onclick="navigator.clipboard.writeText('${pw}').then(()=>toast('Copied!'))">📋</button>`;
+    const out=document.createElement('div');
+    out.className='tool-output';
+    out.style.cssText='flex:1;cursor:pointer;font-size:.78rem;letter-spacing:.02em';
+    out.textContent=pw;
+    out.addEventListener('click',()=>navigator.clipboard.writeText(out.textContent).then(()=>toast('Copied!')));
+    const cpBtn=document.createElement('button');
+    cpBtn.className='t-btn'; cpBtn.style.flex='none'; cpBtn.textContent='📋';
+    cpBtn.addEventListener('click',()=>navigator.clipboard.writeText(out.textContent).then(()=>toast('Copied!')));
+    d.appendChild(out); d.appendChild(cpBtn);
     list.appendChild(d);
   }
 }
-function copyAllPasses(){ const items=[...document.querySelectorAll('#gp-list .tool-output')].map(e=>e.textContent); navigator.clipboard.writeText(items.join('
-')).then(()=>toast('All copied!')); }
+function copyAllPasses(){ const items=[...document.querySelectorAll('#gp-list .tool-output')].map(e=>e.textContent); navigator.clipboard.writeText(items.join('\n')).then(()=>toast('All copied!')); }
 
 // ── Name Generator ──
 const NAMES={
@@ -3256,7 +3277,17 @@ function genPalette(){
   else if(scheme==='pastel') for(let i=0;i<count;i++) colors.push(hsl2hex(Math.floor(Math.random()*360),60,82));
   else if(scheme==='dark') for(let i=0;i<count;i++) colors.push(hsl2hex(Math.floor(Math.random()*360),60,20));
   plist.innerHTML=colors.map(c=>`<div onclick="navigator.clipboard.writeText('${c}').then(()=>toast('${c} copied!'))" title="${c}" style="flex:1;min-width:40px;height:60px;border-radius:10px;background:${c};cursor:pointer;border:2px solid rgba(255,255,255,.1);transition:transform .15s" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''"></div>`).join('');
-  pcodes.innerHTML=colors.map(c=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 12px;font-size:.78rem;font-family:var(--fm);display:flex;align-items:center;gap:10px;cursor:pointer" onclick="navigator.clipboard.writeText('${c}').then(()=>toast('Copied!'))"><span style="width:18px;height:18px;border-radius:4px;background:${c};display:inline-block;flex-shrink:0;border:1px solid rgba(255,255,255,.15)"></span>${c}</div>`).join('');
+  pcodes.innerHTML='';
+  colors.forEach(c=>{
+    const el=document.createElement('div');
+    el.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:7px;padding:7px 12px;font-size:.78rem;font-family:var(--fm);display:flex;align-items:center;gap:10px;cursor:pointer';
+    const swatch=document.createElement('span');
+    swatch.style.cssText=`width:18px;height:18px;border-radius:4px;background:${c};display:inline-block;flex-shrink:0;border:1px solid rgba(255,255,255,.15)`;
+    const label=document.createElement('span');label.textContent=c;
+    el.appendChild(swatch);el.appendChild(label);
+    el.addEventListener('click',()=>navigator.clipboard.writeText(c).then(()=>toast('Copied!')));
+    pcodes.appendChild(el);
+  });
 }
 
 // ── Hash Generator ──
@@ -3286,9 +3317,7 @@ function genLorem(){
   } else if(type==='sentences'){
     const sents=[]; for(let i=0;i<qty;i++){ const wc=Math.floor(Math.random()*15+8); const words=[]; for(let j=0;j<wc;j++) words.push(LOREM_WORDS[Math.floor(Math.random()*LOREM_WORDS.length)]); words[0]=words[0].charAt(0).toUpperCase()+words[0].slice(1); sents.push(words.join(' ')+'.'); } out.value=sents.join(' ');
   } else {
-    const paras=[]; for(let i=0;i<qty;i++){ const sc=Math.floor(Math.random()*4+3); const sents=[]; for(let j=0;j<sc;j++){ const wc=Math.floor(Math.random()*15+8); const words=[]; for(let k=0;k<wc;k++) words.push(LOREM_WORDS[Math.floor(Math.random()*LOREM_WORDS.length)]); words[0]=words[0].charAt(0).toUpperCase()+words[0].slice(1); sents.push(words.join(' ')+'.'); } paras.push(sents.join(' ')); } out.value=paras.join('
-
-');
+    const paras=[]; for(let i=0;i<qty;i++){ const sc=Math.floor(Math.random()*4+3); const sents=[]; for(let j=0;j<sc;j++){ const wc=Math.floor(Math.random()*15+8); const words=[]; for(let k=0;k<wc;k++) words.push(LOREM_WORDS[Math.floor(Math.random()*LOREM_WORDS.length)]); words[0]=words[0].charAt(0).toUpperCase()+words[0].slice(1); sents.push(words.join(' ')+'.'); } paras.push(sents.join(' ')); } out.value=paras.join('\n');
   }
 }
 
@@ -3329,12 +3358,18 @@ function genDates(){
     else str=d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
     dates.push(str);
   }
-  list.innerHTML=dates.map(d=>`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 13px;font-size:.82rem;font-family:var(--fm);color:var(--text);cursor:pointer" onclick="navigator.clipboard.writeText('${d}').then(()=>toast('Copied!'))">${d}</div>`).join('');
+  list.innerHTML='';
+  dates.forEach(d=>{
+    const el=document.createElement('div');
+    el.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 13px;font-size:.82rem;font-family:var(--fm);color:var(--text);cursor:pointer';
+    el.textContent=d;
+    el.addEventListener('click',()=>navigator.clipboard.writeText(d).then(()=>toast('Copied!')));
+    list.appendChild(el);
+  });
 }
 
 // Shared helper for generators
-function copyGenList(id){ const items=[...document.querySelectorAll(`#${id} div`)].map(e=>e.textContent.trim()).filter(Boolean); navigator.clipboard.writeText(items.join('
-')).then(()=>toast('All copied!')); }
+function copyGenList(id){ const el=document.getElementById(id); if(!el) return; const items=[...el.children].map(e=>e.textContent.trim()).filter(Boolean); navigator.clipboard.writeText(items.join('\n')).then(()=>toast('All copied!')); }
 
 // ══════════ HELPERS ══════════
 function showMsg(el,text,type){el.textContent=text;el.className=`auth-msg ${type}`;}
